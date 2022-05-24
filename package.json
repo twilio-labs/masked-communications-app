@@ -1,0 +1,26 @@
+{
+  "name": "myexpressapp",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www",
+    "test": "mocha --reporter spec"
+  },
+  "dependencies": {
+    "chai": "^4.3.6",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "dotenv": "8.2.0",
+    "express": "~4.16.1",
+    "http-errors": "~1.6.3",
+    "inquirer": "7.3.3",
+    "mocha": "^9.2.2",
+    "morgan": "~1.9.1",
+    "ngrok": "~3.3.0",
+    "node-fetch": "2.6.1",
+    "pug": "3.0.0",
+    "request": "^2.88.2",
+    "twilio": "~3.76.1",
+    "cors": "2.8.5"
+  }
+}

@@ -1,0 +1,16 @@
+extends layout
+
+block content
+  - var n = 0
+  table(style='', border='0')
+    each elem in conversations
+      tr
+        td !{n++}
+        td !{elem.conversationSid}
+        td !{elem.uniqueName}
+        td !{elem.friendlyName}
+        td !{elem.conversationState}
+        td !{elem.dateCreated}
+    else 
+      tr 
+        td None Found

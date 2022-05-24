@@ -1,0 +1,44 @@
+extends layout
+
+block content
+  h1= title
+  p Welcome to #{title}
+  table 
+    tr 
+      th Configured Proxy Numbers
+    tr 
+      each elem in numbers
+        td !{elem}
+    tr 
+      td Get sessions
+      td 
+        form(action='/proxypoc/sessions', method='GET')
+          input(name='limit', value='10', type='text')
+          input(type='submit')
+  p
+  form(action='/proxypoc/sessions', method='POST')
+    table(style='', border='0')
+      tr
+        th Create a new proxy session
+      tr
+        td A's phone number
+        td B's phone number
+      tr
+        td 
+          input(name='address', value='', type='text')
+        td
+          input(name='address', value='', type='text')
+        td 
+          input(type='submit')
+  p 
+  form(action='/proxypoc/participantsessions', method='GET')
+    table(style='', border='0')
+      tr
+        th Get Sessions for participant
+      tr
+        td Phone number
+      tr
+        td 
+          input(name='phoneNumber', value='', type='text')
+        td 
+          input(type='submit')
