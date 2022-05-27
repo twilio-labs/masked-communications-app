@@ -175,7 +175,7 @@ router.post('/conversations', function(req, res, next) {
 router.use('/inboundCall', async function(req, res, next) {
 
   console.log(`Got inbound call webhook event: ${req.body}`);
-  const event = JSON.parse(req.body);
+  const event = req.body;
 
   try {
     const twiml = await handleInboundCall(event);
