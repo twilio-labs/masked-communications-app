@@ -154,10 +154,10 @@ async function handleInboundCall(call) {
     }, 'Connecting you, please wait!');
 
     // We call the second participant from the associated proxy_address
-    const dial = response.dial();
-    dial.number({
-        callerId: callee.messagingBinding.proxy_address
-    }, callee.messagingBinding.address);
+    const dial = response.dial({
+      callerId: callee.messagingBinding.proxy_address
+    });
+    dial.number(callee.messagingBinding.address);
   }
 
   return response;
@@ -173,10 +173,9 @@ router.post('/conversations', function(req, res, next) {
 * Calls handleInboundCall to handle inbound call event
 */
 router.use('/inboundCall', async function(req, res, next) {
-
-  console.log(`Got inbound call webhook event: ${req.body}`);
   const event = req.body;
-
+  console.log("Got inbound call webhook event: ", event);
+  
   try {
     const twiml = await handleInboundCall(event);
     res.set('Content-Type', 'text/xml');
