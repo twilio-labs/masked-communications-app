@@ -1,19 +1,15 @@
 var express = require('express');
-const { handle } = require('express/lib/application');
-const { send } = require('express/lib/response');
-
-var router = express.Router();
-
 var client = require("twilio")(process.env.TWIL_FLEX_ACCOUNT_SID, process.env.TWIL_FLEX_ACCOUNT_KEY);
 
+const router = express.Router();
 const numberPool = JSON.parse(process.env.NUMBER_POOL).sort();
 
 async function cleanupConversation(conversationSid) {
   try { 
     await client.conversations.conversations(conversationSid).remove();
-    console.log(`Removed new conversation successfully: ${newConversation.sid}`)
+    console.log(`Removed new conversation successfully: ${conversationSid}`)
   } catch (removeError) {
-    console.log(`Error occurred while removing ${newConversation.sid}: ${removeError}`);
+    console.log(`Error occurred while removing ${conversationSid}: ${removeError}`);
   }
 }
 
@@ -76,8 +72,8 @@ async function fetchProxyAddressesInOpenConversations(address) {
   return proxyAddresses;
 }
 
-async function createConversation() {
-  return client.conversations.conversations.create();
+async function createConversation(sessionOpts) {
+  return client.conversations.conversations.create(sessionOpts);
 }
 
 async function addParticipantToConversation(conversationSid, address, proxyAddress) {
@@ -269,10 +265,38 @@ router.post('/sessions', async function(req, res, next) {
 
   console.time('createSession');
   const addresses = Array.isArray(req.body.address)?req.body.address:[req.body.address];
-  try {
-    const newConversation = await createConversation();
-    console.log(`Created new conversation successfully: ${newConversation.sid}`)
 
+  const sessionOpts = {
+    attributes: req.body.attributes,
+    friendlyName: req.body.friendlyName,
+    messagingServiceSid: req.body.messagingServiceSid,
+    timers: {
+      inactive: req.body["timers.inactive"],
+      closed: req.body["timers.closed"],
+    },
+    uniqueName: req.body.uniqueName,
+    xTwilioWebhookEnabled: req.body.xTwilioWebhookEnabled,
+  };
+
+  console.log(`Got session opts: ${JSON.stringify(sessionOpts)}`);
+
+  let newConversation;
+  try {
+    newConversation = await createConversation(sessionOpts);
+    console.log(`Created new conversation successfully: ${newConversation.sid}`)
+  } catch (e) {
+    console.log(`Couldnt create a new session for ${JSON.stringify(addresses)}: ${e}`)
+    const error = {
+      message: 'Could not create session',
+      raw_message: JSON.stringify(e),
+    }
+
+    return res.send(500, JSON.stringify(error));
+  } finally {
+    console.timeEnd('createSession');
+  }
+
+  try {
     const requests = [];
     addresses.forEach( address => {
       requests.push(handleAddParticipant( newConversation.sid, address));
@@ -288,11 +312,16 @@ router.post('/sessions', async function(req, res, next) {
     return res.status(200).send(`${JSON.stringify(result)}`);
 
   } catch(e) {
+    console.log(`Couldnt add participants to a new session for ${JSON.stringify(addresses)}: ${e}`)
     if ( newConversation) {
       cleanupConversation(newConversation.sid);
     }
-    console.log(`Couldnt create a new session for ${req.query.address}: ${e}`)
-    return res.send(500, e);
+    const error = {
+      message: 'Could not add participants session',
+      raw_message: JSON.stringify(e),
+    }
+
+    return res.send(500, JSON.stringify(error));
   } finally {
     console.timeEnd('createSession');
   }
