@@ -281,6 +281,50 @@ router.use('/global-webhook', async function(req, res, next) {
   res.send({});
 });
 
+
+async function handleCreateSession(sessionOpts, addresses) {
+
+  let newConversation;
+  try {
+    newConversation = await createConversation(sessionOpts);
+    console.log(`Created new conversation successfully: ${newConversation.sid}`)
+  } catch (e) {
+    console.log(`Couldnt create a new session for ${JSON.stringify(addresses)}: ${e}`)
+    const error = {
+      message: 'Could not create session',
+      raw_message: JSON.stringify(e),
+    }
+
+    throw error;
+  }
+
+  try {
+    const participants = [];
+    for ( let i = 0; i < addresses.length; ++i) {
+      participants[i] = await handleAddParticipant(newConversation.sid, addresses[i]);
+    }
+    
+    const result = {
+      sid: newConversation.sid,
+      participants,
+    }
+
+    return result;
+
+  } catch(e) {
+    console.log(`Couldnt add participants to a new session for ${JSON.stringify(addresses)}: ${e}`)
+    if ( newConversation) {
+      cleanupConversation(newConversation.sid);
+    }
+    const error = {
+      message: 'Could not add participants session',
+      raw_message: JSON.stringify(e),
+    }
+
+    throw error;
+  }
+}
+
 /*
 * Creates a session (conversation) for the given address(es)
 * For each address submitted, it will find a proxy number and address/proxy number as a participant to the newly created conversation
@@ -289,6 +333,7 @@ router.use('/global-webhook', async function(req, res, next) {
 router.post('/sessions', async function(req, res, next) {
 
   const addresses = Array.isArray(req.body.address)?req.body.address:[req.body.address];
+  console.time('sessionCreate');
 
   const sessionOpts = {
     attributes: req.body.attributes,
@@ -304,46 +349,15 @@ router.post('/sessions', async function(req, res, next) {
 
   console.log(`Got session opts: ${JSON.stringify(sessionOpts)}`);
 
-  let newConversation;
   try {
-    newConversation = await createConversation(sessionOpts);
-    console.log(`Created new conversation successfully: ${newConversation.sid}`)
-  } catch (e) {
-    console.log(`Couldnt create a new session for ${JSON.stringify(addresses)}: ${e}`)
-    const error = {
-      message: 'Could not create session',
-      raw_message: JSON.stringify(e),
-    }
-
-    return res.send(500, JSON.stringify(error));
-  }
-
-  try {
-    const requests = [];
-    addresses.forEach( address => {
-      requests.push(handleAddParticipant( newConversation.sid, address));
-    });
-    
-    const values = await Promise.all(requests);
-
-    const result = {
-      sid: newConversation.sid,
-      participants: values,
-    }
-
+    const result = await handleCreateSession(sessionOpts, addresses);
     return res.status(200).send(`${JSON.stringify(result)}`);
 
   } catch(e) {
-    console.log(`Couldnt add participants to a new session for ${JSON.stringify(addresses)}: ${e}`)
-    if ( newConversation) {
-      cleanupConversation(newConversation.sid);
-    }
-    const error = {
-      message: 'Could not add participants session',
-      raw_message: JSON.stringify(e),
-    }
-
-    return res.send(500, JSON.stringify(error));
+    console.log(`Couldnt create a new session for ${JSON.stringify(addresses)}: ${JSON.stringify(e)}`)
+    return res.send(500, JSON.stringify(e));
+  } finally {
+    console.timeEnd('sessionCreate');
   }
 });
 
