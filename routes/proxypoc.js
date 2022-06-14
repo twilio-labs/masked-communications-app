@@ -56,9 +56,11 @@ async function fetchOpenConversationsForAddress(address) {
   return getOpenConversationsForAddress(participantConversations);
 }
 
-async function fetchProxyAddressesInOpenConversations(address) {
+// Helper method that fetches a Particpant's open Conversations and returns a Set of 
+// the proxy_addresses in all those open conversations
+async function fetchProxyAddressesInOpenConversationsForAddress(address) {
   if (address === undefined) {
-    throw "fetchOpenConversationsForAddress: address is missing";
+    throw "fetchProxyAddressesInOpenConversationsForAddress: address is missing";
   }
 
   const proxyAddresses = new Set();
@@ -72,10 +74,12 @@ async function fetchProxyAddressesInOpenConversations(address) {
   return proxyAddresses;
 }
 
+// Helper function for create /Conversations endpoint
 async function createConversation(sessionOpts) {
   return client.conversations.conversations.create(sessionOpts);
 }
 
+// Helper function for Conversations create /Participants endpoint
 async function addParticipantToConversation(conversationSid, address, proxyAddress) {
   return client.conversations.conversations(conversationSid).participants.create({
     'messagingBinding.address': address,
@@ -83,6 +87,8 @@ async function addParticipantToConversation(conversationSid, address, proxyAddre
   })
 }
 
+// Get the numbers in the numberPool that are not in activeSessionNumbers
+// This is accomplished by filtering out the activeSessionNumbers out of the number pool
 function getSetOfAvailableNumbers(numberPool, activeSessionNumbers) {
   const notAvailableNumbers = new Set(activeSessionNumbers);
 
@@ -97,7 +103,7 @@ function getSetOfAvailableNumbers(numberPool, activeSessionNumbers) {
 
 async function handleAddParticipant(conversationSid, address) {
   
-  const openConversationsProxyAddresses = await fetchProxyAddressesInOpenConversations(address);
+  const openConversationsProxyAddresses = await fetchProxyAddressesInOpenConversationsForAddress(address);
   const availableNumbers = getSetOfAvailableNumbers(numberPool, openConversationsProxyAddresses);
   console.log(`Found proxy number candidates for ${address}: ${availableNumbers}`);
 
@@ -105,9 +111,22 @@ async function handleAddParticipant(conversationSid, address) {
     throw 'No proxy numbers available';
   }
 
-  const participant = await addParticipantToConversation(conversationSid, address, availableNumbers[0]);
-  console.log(`Added participant ${address} successfully: ${participant.sid} to ${conversationSid}`);
-  return participant;
+  // We need to iterate over the list of available numbers until we add the participant successfully
+  // This is needed since we may issue more than one request for a given number to add to a session
+  // for e.g. a driver has multiple deliveries to make
+  for ( let i = 0; i < availableNumbers.length; ++i) {
+    try {
+      console.log(`Try add ${address} with proxy_address ${availableNumbers[i]} to conversation ${conversationSid}`);
+      const participant = await addParticipantToConversation(conversationSid, address, availableNumbers[i]);
+      console.log(`Added participant ${address} successfully: ${participant.sid} to ${conversationSid}`);
+      return participant;
+    } catch (e) {
+      console.log(`Failed to add participant ${address} with proxy_address ${availableNumbers[i]}: ${JSON.stringify(e)}`)
+    }
+  }
+
+  // if we get here, it means we couldnt find a suitable number
+  throw 'No proxy numbers available';
 }
 
 /*
@@ -144,7 +163,7 @@ async function handleInboundCall(call) {
       }
     });
 
-    const say = response.say({
+    response.say({
       voice: 'woman',
       language: 'en'
     }, 'Connecting you, please wait!');
@@ -158,12 +177,6 @@ async function handleInboundCall(call) {
 
   return response;
 }
-
-// Conversation events
-router.post('/conversations', function(req, res, next) {
-  console.log("Conversations event: ", req.body)
-  res.send();
-});
 
 /*
 * Calls handleInboundCall to handle inbound call event
@@ -191,11 +204,6 @@ router.get('/sessions', async function(req, res, next) {
     }
     return a.state==='closed'?1:-1;
   });
-
-  /*conversations.forEach( async c => {
-    const ps = await c.participants().list();
-    console.log(`${JSON.stringify(ps)}`)
-  });*/
 
   res.render('conversations', { title: 'Conversations', conversations });
 });
@@ -248,12 +256,29 @@ router.get('/participantsessions', async function(req, res, next) {
   res.render('conversations', { title: 'Conversations', conversations });
 });
 
-
-router.use('/global-webhook', function(req, res, next) {
+// Handle out of session messages
+// Pre-requisite - This endpoint must be set as post event global webhook
+router.use('/global-webhook', async function(req, res, next) {
 
   console.log(`Got conversation service webhook event query: ${JSON.stringify(req.body)}`);
+  if  ( req.body.EventType !== 'onConversationAdded') {
+    return res.send({});
+  }
 
-  res.send({})
+  if ( !req.body['ConversationSid']) {
+    return res.send({});
+  }
+
+  // Send a friendly message
+  const messageOpts = {
+    author: 'System',
+    body: 'Thank you for contacting us. Please call us on 123123123',
+
+  }
+  await client.conversations.conversations(req.body.ConversationSid).messages.create(messageOpts);
+  await cleanupConversation(req.body.ConversationSid.sid);
+
+  res.send({});
 });
 
 /*
@@ -263,7 +288,6 @@ router.use('/global-webhook', function(req, res, next) {
 */
 router.post('/sessions', async function(req, res, next) {
 
-  console.time('createSession');
   const addresses = Array.isArray(req.body.address)?req.body.address:[req.body.address];
 
   const sessionOpts = {
@@ -292,8 +316,6 @@ router.post('/sessions', async function(req, res, next) {
     }
 
     return res.send(500, JSON.stringify(error));
-  } finally {
-    console.timeEnd('createSession');
   }
 
   try {
@@ -322,8 +344,6 @@ router.post('/sessions', async function(req, res, next) {
     }
 
     return res.send(500, JSON.stringify(error));
-  } finally {
-    console.timeEnd('createSession');
   }
 });
 
