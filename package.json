@@ -7,6 +7,7 @@
     "test": "mocha --reporter spec"
   },
   "dependencies": {
+    "async-await-retry": "^1.2.4",
     "chai": "^4.3.6",
     "cookie-parser": "~1.4.4",
     "cors": "2.8.5",

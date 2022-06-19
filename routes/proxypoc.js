@@ -1,15 +1,53 @@
 var express = require('express');
+const retry = require('async-await-retry');
+const request = require('request');
 var client = require("twilio")(process.env.TWIL_FLEX_ACCOUNT_SID, process.env.TWIL_FLEX_ACCOUNT_KEY);
 
 const router = express.Router();
 const numberPool = JSON.parse(process.env.NUMBER_POOL).sort();
 
+async function timeout(data) {
+  const interval = data.exponential ? data.interval * data.factor : data.interval;
+  // if interval is set to zero, do not use setTimeout, gain 1 event loop tick
+  if (interval) await new Promise(r => setTimeout(r, interval + data.jitter));
+}
+
+async function doCleanupConversation(conversationSid) {
+  await new Promise((a) => {setTimeout(a, Math.random(10000) + 100)});
+  if ( !conversationSid) {
+    console.error('Underfined conversationSid');
+  }
+  const conversationInst = client.conversations.conversations(conversationSid);
+  const res = await retry( async () => {
+    return conversationInst.remove();
+    },
+    null, 
+    {
+      onAttemptFail: async (data) => {
+        console.warn(`Got error response while cleaning up convo ${conversationSid}: ${JSON.stringify(data)}`);
+        if ( data.error.status === 429) {
+          await timeout(data);
+          return true;
+        } else {
+          console.error(`Got error response while cleaning up convo, not retrying ${conversationSid}: ${JSON.stringify(data)}`);
+          return false; // dont retry
+        }
+      },
+      retriesMax: 4,
+      interval: 1000,
+      exponential: true,
+      factor: 3,
+      jitter: 10000
+    });
+    return res;
+}
+
 async function cleanupConversation(conversationSid) {
   try { 
-    await client.conversations.conversations(conversationSid).remove();
+    await doCleanupConversation(conversationSid);
     console.log(`Removed new conversation successfully: ${conversationSid}`)
   } catch (removeError) {
-    console.log(`Error occurred while removing ${conversationSid}: ${removeError}`);
+    console.error(`Error occurred while removing ${conversationSid}: ${removeError}`);
   }
 }
 
@@ -74,17 +112,64 @@ async function fetchProxyAddressesInOpenConversationsForAddress(address) {
   return proxyAddresses;
 }
 
-// Helper function for create /Conversations endpoint
+
+
+
+// Helper function for create /Conversations endpoint with retry handling
 async function createConversation(sessionOpts) {
-  return client.conversations.conversations.create(sessionOpts);
+  const res = await retry( async () => {
+    return client.conversations.conversations.create(sessionOpts);
+    },
+    null, 
+    {
+      onAttemptFail: async (data) => {
+        console.warn(`Got error response when creating conversation ${JSON.stringify(data)}`);
+        if ( data.error.status === 429) {
+          await timeout(data);
+          return true;
+        } else {
+          return false; // dont retry
+        }
+      },
+      retriesMax: 4,
+      interval: 1000,
+      exponential: true,
+      factor: 3,
+      jitter: 1000
+    });
+    return res;
+}
+
+async function doAddParticipantToConversation(conversationSid, address, proxyAddress) {
+  const res = await retry( async () => {
+      return client.conversations.conversations(conversationSid).participants.create({
+        'messagingBinding.address': address,
+        'messagingBinding.proxyAddress': proxyAddress
+      });
+    },
+    null, 
+    {
+      onAttemptFail: async (data) => {
+        console.warn(`Got error response when adding participant ${address}:${proxyAddress} to ${conversationSid}: ${JSON.stringify(data)}`);
+        if ( data.error.status === 429) {
+          timeout(data);
+          return true;
+        } else {
+          return false; // dont retry
+        }
+      },
+      retriesMax: 4,
+      interval: 1000,
+      exponential: true,
+      factor: 3,
+      jitter: 1000
+    });
+    return res;
 }
 
 // Helper function for Conversations create /Participants endpoint
 async function addParticipantToConversation(conversationSid, address, proxyAddress) {
-  return client.conversations.conversations(conversationSid).participants.create({
-    'messagingBinding.address': address,
-    'messagingBinding.proxyAddress': proxyAddress
-  })
+  return doAddParticipantToConversation(conversationSid, address, proxyAddress);
 }
 
 // Get the numbers in the numberPool that are not in activeSessionNumbers
@@ -102,18 +187,22 @@ function getSetOfAvailableNumbers(numberPool, activeSessionNumbers) {
 }
 
 async function handleAddParticipant(conversationSid, address) {
-  
+  console.log(`handleAddParticipant called with ${conversationSid} and ${address}`);
+
   const openConversationsProxyAddresses = await fetchProxyAddressesInOpenConversationsForAddress(address);
   const availableNumbers = getSetOfAvailableNumbers(numberPool, openConversationsProxyAddresses);
-  console.log(`Found proxy number candidates for ${address}: ${availableNumbers}`);
 
   if ( availableNumbers.length === 0) {
+    console.error(`No Proxy numbers to add ${address} to ${conversationSid}`);
     throw 'No proxy numbers available';
-  }
+  } else {
+    console.log(`Found proxy number candidates for ${address}: ${availableNumbers}`);
+  }  
 
   // We need to iterate over the list of available numbers until we add the participant successfully
   // This is needed since we may issue more than one request for a given number to add to a session
   // for e.g. a driver has multiple deliveries to make
+  let lastError;
   for ( let i = 0; i < availableNumbers.length; ++i) {
     try {
       console.log(`Try add ${address} with proxy_address ${availableNumbers[i]} to conversation ${conversationSid}`);
@@ -121,12 +210,13 @@ async function handleAddParticipant(conversationSid, address) {
       console.log(`Added participant ${address} successfully: ${participant.sid} to ${conversationSid}`);
       return participant;
     } catch (e) {
-      console.log(`Failed to add participant ${address} with proxy_address ${availableNumbers[i]}: ${JSON.stringify(e)}`)
+      console.error(`Failed to add participant ${address} with proxy_address ${availableNumbers[i]}: ${JSON.stringify(e)}`)
+      lastError = e;
     }
   }
 
-  // if we get here, it means we couldnt find a suitable number
-  throw 'No proxy numbers available';
+    // if we get here, it means we couldnt find a suitable number
+    throw lastError;
 }
 
 /*
@@ -190,14 +280,14 @@ router.use('/inboundCall', async function(req, res, next) {
     res.set('Content-Type', 'text/xml');
     res.send(twiml.toString())  
   } catch(e) {
-    console.log(`Something went wrong when handling inbound call ${e}`)
+    console.error(`Something went wrong when handling inbound call ${e}`)
     res.send(500, e);
   }
 });
 
 // Returns the Conversations reverse chrono order
 router.get('/sessions', async function(req, res, next) {
-  const conversations =  await client.conversations.conversations.list({limit: req.query.limit?parseInt(req.query.limit):20});
+  const conversations =  await client.conversations.conversations.list({limit: req.query.limit?parseInt(req.query.limit):200});
   conversations.sort((a, b) => {
     if ( a.state === b.state) {
       return b.dateCreated - a.dateCreated;
@@ -243,7 +333,7 @@ router.get('/participantsessions', async function(req, res, next) {
     return res.render('participantConversations', { title: 'Conversations', conversations });
   }
 
-  const conversations =  await client.conversations.conversations.list({limit: 10});
+  const conversations =  await client.conversations.conversations.list({limit: 100});
   conversations.sort((a, b) => {
     return b.dateCreated - a.dateCreated;
   });
@@ -289,7 +379,7 @@ async function handleCreateSession(sessionOpts, addresses) {
     newConversation = await createConversation(sessionOpts);
     console.log(`Created new conversation successfully: ${newConversation.sid}`)
   } catch (e) {
-    console.log(`Couldnt create a new session for ${JSON.stringify(addresses)}: ${e}`)
+    console.error(`Couldnt create a new session for ${JSON.stringify(addresses)}: ${JSON.stringify(e)}`)
     const error = {
       message: 'Could not create session',
       raw_message: JSON.stringify(e),
@@ -303,7 +393,7 @@ async function handleCreateSession(sessionOpts, addresses) {
     for ( let i = 0; i < addresses.length; ++i) {
       participants[i] = await handleAddParticipant(newConversation.sid, addresses[i]);
     }
-    
+
     const result = {
       sid: newConversation.sid,
       participants,
@@ -312,11 +402,16 @@ async function handleCreateSession(sessionOpts, addresses) {
     return result;
 
   } catch(e) {
-    console.log(`Couldnt add participants to a new session for ${JSON.stringify(addresses)}: ${e}`)
+    console.error(`Couldnt add participants to a new session for ${JSON.stringify(addresses)}: ${e}`)
     if ( newConversation) {
-      cleanupConversation(newConversation.sid);
+      try {
+        await cleanupConversation(newConversation.sid);
+      } catch (ce) {
+        console.log(`Couldnt clean up conversation ${newConversation.sid}: ${JSON.stringify(ce)}`);
+      }
     }
     const error = {
+      sid: newConversation.sid,
       message: 'Could not add participants session',
       raw_message: JSON.stringify(e),
     }
@@ -354,7 +449,7 @@ router.post('/sessions', async function(req, res, next) {
     return res.status(200).send(`${JSON.stringify(result)}`);
 
   } catch(e) {
-    console.log(`Couldnt create a new session for ${JSON.stringify(addresses)}: ${JSON.stringify(e)}`)
+    console.error(`Couldnt create a new session for ${JSON.stringify(addresses)}: ${JSON.stringify(e)}`)
     return res.send(500, JSON.stringify(e));
   } finally {
     console.timeEnd('sessionCreate');
