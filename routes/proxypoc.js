@@ -13,7 +13,6 @@ async function timeout(data) {
 }
 
 async function doCleanupConversation(conversationSid) {
-  await new Promise((a) => {setTimeout(a, Math.random(10000) + 100)});
   if ( !conversationSid) {
     console.error('Underfined conversationSid');
   }
@@ -24,8 +23,8 @@ async function doCleanupConversation(conversationSid) {
     null, 
     {
       onAttemptFail: async (data) => {
-        console.warn(`Got error response while cleaning up convo ${conversationSid}: ${JSON.stringify(data)}`);
         if ( data.error.status === 429) {
+          console.warn(`Got error response while cleaning up convo, will retry ${conversationSid}: ${JSON.stringify(data)}`);
           await timeout(data);
           return true;
         } else {
@@ -53,7 +52,6 @@ async function cleanupConversation(conversationSid) {
 
 // Finds a single conversation for a participant with the given address and proxy address
 async function getOpenConversationForAddressPair(address, proxyAddress) {
-
   if (address === undefined) {
     throw "getOpenConversationsForAddressPair: address is missing";
   }
@@ -111,9 +109,6 @@ async function fetchProxyAddressesInOpenConversationsForAddress(address) {
 
   return proxyAddresses;
 }
-
-
-
 
 // Helper function for create /Conversations endpoint with retry handling
 async function createConversation(sessionOpts) {
@@ -239,9 +234,9 @@ async function handleInboundCall(call) {
   if ( !conversation) {
     console.log(`Didnt find matching session (conversation) for ${address}/${proxyAddress}`);
     response.say({
-      voice: 'woman',
-      language: 'en'
-    }, 'Sorry, I dont know who to connect you to!');
+      voice: process.env.CALL_ANNOUCEMENT_VOICE,
+      language: process.env.CALL_ANNOUCEMENT_LANGUAGE
+    }, process.env.OUT_OF_SESSION_MESSAGE_FOR_CALL);
   } else {
 
     // We got the conversation, let's get the participants in the convo.
@@ -254,9 +249,9 @@ async function handleInboundCall(call) {
     });
 
     response.say({
-      voice: 'woman',
-      language: 'en'
-    }, 'Connecting you, please wait!');
+      voice: process.env.CALL_ANNOUCEMENT_VOICE,
+      language: process.env.CALL_ANNOUCEMENT_LANGUAGE
+    }, process.env.CONNECTING_CALL_ANNOUCEMENT);
 
     // We call the second participant from the associated proxy_address
     const dial = response.dial({
@@ -267,6 +262,56 @@ async function handleInboundCall(call) {
 
   return response;
 }
+
+// Creates a conversation and adds the participants to the conversation
+async function handleCreateSession(sessionOpts, addresses) {
+
+  let newConversation;
+  try {
+    newConversation = await createConversation(sessionOpts);
+    console.log(`Created new conversation successfully: ${newConversation.sid}`)
+  } catch (e) {
+    console.error(`Couldnt create a new session for ${JSON.stringify(addresses)}: ${JSON.stringify(e)}`)
+    const error = {
+      message: 'Could not create session',
+      raw_message: JSON.stringify(e),
+    }
+
+    throw error;
+  }
+
+  try {
+    const participants = [];
+    for ( let i = 0; i < addresses.length; ++i) {
+      participants[i] = await handleAddParticipant(newConversation.sid, addresses[i]);
+    }
+
+    const result = {
+      sid: newConversation.sid,
+      participants,
+    }
+
+    return result;
+
+  } catch(e) {
+    console.error(`Couldnt add participants to a new session for ${JSON.stringify(addresses)}: ${e}`)
+    if ( newConversation) {
+      try {
+        await cleanupConversation(newConversation.sid);
+      } catch (ce) {
+        console.log(`Couldnt clean up conversation ${newConversation.sid}: ${JSON.stringify(ce)}`);
+      }
+    }
+    const error = {
+      sid: newConversation.sid,
+      message: 'Could not add participants session',
+      raw_message: JSON.stringify(e),
+    }
+
+    throw error;
+  }
+}
+
 
 /*
 * Calls handleInboundCall to handle inbound call event
@@ -362,63 +407,14 @@ router.use('/global-webhook', async function(req, res, next) {
   // Send a friendly message
   const messageOpts = {
     author: 'System',
-    body: 'Thank you for contacting us. Please call us on 123123123',
-
+    body: process.eng.OUT_OF_SESSION_MESSAGE_ASYNC_CHANNEL,
   }
+
   await client.conversations.conversations(req.body.ConversationSid).messages.create(messageOpts);
   await cleanupConversation(req.body.ConversationSid.sid);
 
   res.send({});
 });
-
-
-async function handleCreateSession(sessionOpts, addresses) {
-
-  let newConversation;
-  try {
-    newConversation = await createConversation(sessionOpts);
-    console.log(`Created new conversation successfully: ${newConversation.sid}`)
-  } catch (e) {
-    console.error(`Couldnt create a new session for ${JSON.stringify(addresses)}: ${JSON.stringify(e)}`)
-    const error = {
-      message: 'Could not create session',
-      raw_message: JSON.stringify(e),
-    }
-
-    throw error;
-  }
-
-  try {
-    const participants = [];
-    for ( let i = 0; i < addresses.length; ++i) {
-      participants[i] = await handleAddParticipant(newConversation.sid, addresses[i]);
-    }
-
-    const result = {
-      sid: newConversation.sid,
-      participants,
-    }
-
-    return result;
-
-  } catch(e) {
-    console.error(`Couldnt add participants to a new session for ${JSON.stringify(addresses)}: ${e}`)
-    if ( newConversation) {
-      try {
-        await cleanupConversation(newConversation.sid);
-      } catch (ce) {
-        console.log(`Couldnt clean up conversation ${newConversation.sid}: ${JSON.stringify(ce)}`);
-      }
-    }
-    const error = {
-      sid: newConversation.sid,
-      message: 'Could not add participants session',
-      raw_message: JSON.stringify(e),
-    }
-
-    throw error;
-  }
-}
 
 /*
 * Creates a session (conversation) for the given address(es)
