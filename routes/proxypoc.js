@@ -1,7 +1,7 @@
 var express = require('express');
 const retry = require('async-await-retry');
 const request = require('request');
-var client = require("twilio")(process.env.TWIL_FLEX_ACCOUNT_SID, process.env.TWIL_FLEX_ACCOUNT_KEY);
+var client = require("twilio")(process.env.TWIL_ACCOUNT_SID, process.env.TWIL_ACCOUNT_KEY);
 
 const router = express.Router();
 const numberPool = JSON.parse(process.env.NUMBER_POOL).sort();
@@ -426,12 +426,15 @@ router.post('/sessions', async function(req, res, next) {
   const addresses = Array.isArray(req.body.address)?req.body.address:[req.body.address];
   console.time('sessionCreate');
 
+  // use default inactive timer value if none passed
+  const inactiveTimer = req.body["timers.inactive"] ? req.body["timers.inactive"] : 'PT'+eval(process.env.CONVERSATION_SESSION_TIMEOUT)+'M';
+
   const sessionOpts = {
     attributes: req.body.attributes,
     friendlyName: req.body.friendlyName,
     messagingServiceSid: req.body.messagingServiceSid,
     timers: {
-      inactive: req.body["timers.inactive"],
+      inactive: inactiveTimer,
       closed: req.body["timers.closed"],
     },
     uniqueName: req.body.uniqueName,
