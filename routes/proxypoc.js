@@ -427,7 +427,8 @@ router.post('/sessions', async function(req, res, next) {
   console.time('sessionCreate');
 
   // use default inactive timer value if none passed
-  const inactiveTimer = req.body["timers.inactive"] ? req.body["timers.inactive"] : 'PT'+eval(process.env.CONVERSATION_SESSION_TIMEOUT)+'M';
+  const inactiveTimer = req.body["timers.inactive"] ? req.body["timers.inactive"] : (process.env.CONVERSATION_SESSION_TIMEOUT_IN_MINUTES)?'PT'+eval(process.env.CONVERSATION_SESSION_TIMEOUT_IN_MINUTES)+'M':'PT0M';
+  const closedTimer = req.body["timers.closed"] ? req.body["timers.closed"] : (process.env.CONVERSATION_SESSION_CLOSED_IN_MINUTES) ? 'PT'+eval(process.env.CONVERSATION_SESSION_CLOSED_IN_MINUTES)+'M':'PT0M';
 
   const sessionOpts = {
     attributes: req.body.attributes,
@@ -435,7 +436,7 @@ router.post('/sessions', async function(req, res, next) {
     messagingServiceSid: req.body.messagingServiceSid,
     timers: {
       inactive: inactiveTimer,
-      closed: req.body["timers.closed"],
+      closed: closedTimer,
     },
     uniqueName: req.body.uniqueName,
     xTwilioWebhookEnabled: req.body.xTwilioWebhookEnabled,
