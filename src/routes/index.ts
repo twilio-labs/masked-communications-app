@@ -1,19 +1,18 @@
 import { Router } from "express";
+import * as controllers from "../controllers";
 
 const router = Router();
 
-router.post("/sessions", async (req, res) => {});
+router.post(
+  "/conversations-post-event",
+  controllers.conversationsPostEvent.post
+);
 
-router.delete("/sessions", async (req, res) => {});
+router.post("/conversations-pre-event", controllers.conversationsPreEvent.post);
 
-router.post("/conversations-pre-event", async (req, res) => {
-  // onConversationAdd
-});
+router.post("/inbound-call", controllers.inboundCall.post);
 
-router.post("/conversations-post-event", async (req, res) => {
-  // onConversationStateUpdated
-});
-
-router.post("/inbound-call", async (req, res) => {});
+router.delete("/sessions", controllers.session._delete);
+router.post("/sessions", controllers.session.post);
 
 export default router;
