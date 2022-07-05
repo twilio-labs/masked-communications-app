@@ -9,7 +9,7 @@ if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN)
 
 const client = twilio(
   process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_ACCOUNT_SID
+  process.env.TWILIO_AUTH_TOKEN
 );
 
 export default client;
