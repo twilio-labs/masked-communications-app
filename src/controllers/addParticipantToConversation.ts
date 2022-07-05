@@ -1,7 +1,5 @@
-export async function addParticipantToConversation({
-  proxyPhone,
-}: AddParticipantToConversation) {}
+export async function addParticipantToConversation(
+  params: AddParticipantToConversation
+) {}
 
-export interface AddParticipantToConversation {
-  proxyPhone: string;
-}
+export interface AddParticipantToConversation {}

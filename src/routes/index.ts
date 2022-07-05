@@ -3,6 +3,7 @@ import { Router } from "express";
 const router = Router();
 
 router.post("/sessions", async (req, res) => {});
+
 router.delete("/sessions", async (req, res) => {});
 
 router.post("/conversations-pre-event", async (req, res) => {
