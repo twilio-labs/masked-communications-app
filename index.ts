@@ -3,9 +3,7 @@ import express from "express";
 import createError from "http-errors";
 import logger from "morgan";
 import router from "./src/routes";
-import client from "./src/services/twilio.service";
 
-client.messages.list();
 const PORT = process.env.PORT || 3000;
 
 const app = express();
