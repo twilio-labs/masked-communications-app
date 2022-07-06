@@ -1,15 +1,5 @@
 import type { Request, Response } from "express";
-import { ParticipantInstance } from "twilio/lib/rest/conversations/v1/conversation/participant";
-import Proxy from "twilio/lib/rest/Proxy";
-import { addParticipantToConversation } from "../services/participant.service";
 import client from "../twilioClient";
-
-export const _delete = async (
-  req: Request<{}, {}, SessionDeleteBody>,
-  res: Response
-) => {};
-
-interface SessionDeleteBody {}
 
 const getActiveProxyAddresses = async (phoneNumbers: Array<String>) : Promise<ActiveProxyAddresses> => {
   let activeConversations = {}
@@ -54,7 +44,10 @@ const matchAvailableProxyAddresses = async (activeProxyAddresses: ActiveProxyAdd
 
 const createConversation = async () : Promise<string> => {
   return await client.conversations.conversations
-    .create({friendlyName: `conversation_at_${Date.now()}`})
+    .create({
+      friendlyName: `conversation_at_${Date.now()}`,
+      xTwilioWebhookEnabled: 'true'
+    })
     .then((c) => { return c.sid })
     .catch((err) => { throw `createConversation: ${err}` });
 }
@@ -81,7 +74,8 @@ const addParticipantsToConversation = (conversationSid: string, proxyBindings: P
     promises.push(request);
   }
 
-  return Promise.all(promises);
+  return Promise.all(promises)
+    .catch((err) => { throw `addParticipantsToConversation: ${err}`});
 }
 
 export const post = async (
@@ -101,6 +95,41 @@ export const post = async (
 
 interface SessionPostBody {
   participantAddresses: Array<string>;
+}
+
+export const _delete = async (
+  req: Request<{}, {}, SessionDeleteBody>,
+  res: Response
+) => {
+    
+  const {
+    EventType: eventType,
+    State: state,
+    ConversationSid: conversationSid
+  } = req.body;
+  
+  if (eventType === "onConversationUpdated" && state === "closed") {
+    await client.conversations
+      .conversations(conversationSid)
+      .remove()
+      .catch((err) => { throw err })
+  }
+
+  res.sendStatus(200)
+};
+
+interface SessionDeleteBody {
+  MessagingServiceSid: string;
+  RetryCount: string;
+  EventType: string;
+  DateUpdated: string;
+  State: string;
+  Attributes: string;
+  DateCreated: string;
+  ChatServiceSid: string;
+  AccountSid: string;
+  Source: string;
+  ConversationSid: string;
 }
 
 interface ActiveProxyAddresses {
