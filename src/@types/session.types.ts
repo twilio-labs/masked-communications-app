@@ -3,8 +3,8 @@ import { ConversationListInstanceCreateOptions } from "twilio/lib/rest/conversat
 export interface SessionPostBody extends ConversationListInstanceCreateOptions {
   addresses: Array<string>;
 }
-
-export interface SessionDeleteBody {
+  
+export interface ConversationsPostEventBody {
   AccountSid: string;
   Attributes: string;
   ChatServiceSid: string;

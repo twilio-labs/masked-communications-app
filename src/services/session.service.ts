@@ -1,6 +1,5 @@
 import client from "../twilioClient";
-import { ConversationInstance } from "twilio/lib/rest/conversations/v1/conversation";
-import { ActiveProxyAddresses, SessionPostBody, ProxyBindings } from "../@types/session.types";
+import { ActiveProxyAddresses, ProxyBindings } from "../@types/session.types";
 
 export const getActiveProxyAddresses = async (phoneNumbers: Array<String>) : Promise<ActiveProxyAddresses> => {
   let activeConversations = {}
@@ -43,13 +42,6 @@ export const matchAvailableProxyAddresses = async (activeProxyAddresses: ActiveP
   return proxyBindings;
 }
 
-export const createConversation = async (options: SessionPostBody) : Promise<ConversationInstance> => {
-  return await client.conversations.conversations
-    .create(options)
-    .then((c) => { return c })
-    .catch((err) => { throw `createConversation: ${err}` });
-}
-
 export const addParticipantsToConversation = (conversationSid: string, proxyBindings: ProxyBindings) => {
   let promises = [];
 
@@ -74,12 +66,4 @@ export const addParticipantsToConversation = (conversationSid: string, proxyBind
 
   return Promise.all(promises)
     .catch((err) => { throw `addParticipantsToConversation: ${err}`});
-}
-
-export const deleteConversation = async (conversationSid: string) : Promise<boolean> => {
-  return client.conversations
-    .conversations(conversationSid)
-    .remove()
-    .then((c) => { return c })
-    .catch((err) => { throw err })
 }
