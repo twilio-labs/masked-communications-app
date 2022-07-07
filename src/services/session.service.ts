@@ -1,6 +1,6 @@
 import client from "../twilioClient";
 import { ConversationInstance } from "twilio/lib/rest/conversations/v1/conversation";
-import { SessionPostBody } from "../@types/session.types";
+import { ActiveProxyAddresses, SessionPostBody, ProxyBindings } from "../@types/session.types";
 
 export const getActiveProxyAddresses = async (phoneNumbers: Array<String>) : Promise<ActiveProxyAddresses> => {
   let activeConversations = {}
@@ -82,12 +82,4 @@ export const deleteConversation = async (conversationSid: string) : Promise<bool
     .remove()
     .then((c) => { return c })
     .catch((err) => { throw err })
-}
-
-interface ActiveProxyAddresses {
-  [key: string]: Array<string>
-}
-
-interface ProxyBindings {
-  [key: string]: string
 }
