@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { ConversationInstance, ConversationListInstanceCreateOptions } from "twilio/lib/rest/conversations/v1/conversation";
 import client from "../twilioClient";
 
 const getActiveProxyAddresses = async (phoneNumbers: Array<String>) : Promise<ActiveProxyAddresses> => {
@@ -42,13 +43,10 @@ const matchAvailableProxyAddresses = async (activeProxyAddresses: ActiveProxyAdd
   return proxyBindings;
 }
 
-const createConversation = async () : Promise<string> => {
+const createConversation = async (options: SessionPostBody) : Promise<ConversationInstance> => {
   return await client.conversations.conversations
-    .create({
-      friendlyName: `conversation_at_${Date.now()}`,
-      xTwilioWebhookEnabled: 'true'
-    })
-    .then((c) => { return c.sid })
+    .create(options)
+    .then((c) => { return c })
     .catch((err) => { throw `createConversation: ${err}` });
 }
 
@@ -78,58 +76,74 @@ const addParticipantsToConversation = (conversationSid: string, proxyBindings: P
     .catch((err) => { throw `addParticipantsToConversation: ${err}`});
 }
 
+const deleteConversation = async (conversationSid: string) : Promise<boolean> => {
+  return client.conversations
+    .conversations(conversationSid)
+    .remove()
+    .then((c) => { return c })
+    .catch((err) => { throw err })
+}
+
 export const post = async (
   req: Request<{}, {}, SessionPostBody>,
   res: Response
 ) => {
   console.log(req.body);
 
-  const phoneNumbers = req.body.participantAddresses;
+  const phoneNumbers = req.body.addresses;
   const activeProxyAddresses = await getActiveProxyAddresses(phoneNumbers); 
   const proxyBindings = await matchAvailableProxyAddresses(activeProxyAddresses);
-  const conversationSid = await createConversation()
-  await addParticipantsToConversation(conversationSid, proxyBindings)
+  const conversation = await createConversation(req.body)
 
-  res.sendStatus(200)
+  try {
+    await addParticipantsToConversation(conversation.sid, proxyBindings)
+    return res.status(200).send(`${JSON.stringify(conversation)}`);
+  } catch(err) {
+    await deleteConversation(conversation.sid);
+    return res.status(500).send(`${conversation.sid} failed to create session: ${err}`)
+  }
+
 };
-
-interface SessionPostBody {
-  participantAddresses: Array<string>;
-}
 
 export const _delete = async (
   req: Request<{}, {}, SessionDeleteBody>,
   res: Response
-) => {
+  ) => {
     
-  const {
-    EventType: eventType,
-    State: state,
-    ConversationSid: conversationSid
-  } = req.body;
-  
-  if (eventType === "onConversationUpdated" && state === "closed") {
-    await client.conversations
-      .conversations(conversationSid)
-      .remove()
-      .catch((err) => { throw err })
-  }
+    const {
+      EventType: eventType,
+      State: state,
+      ConversationSid: conversationSid
+    } = req.body;
+    
+    if (eventType === "onConversationUpdated" && state === "closed") {
+      try {
+        await deleteConversation(conversationSid)
+      } catch(err) {
+        return res.status(500).send(`${conversationSid} failed to delete: ${err}`)
+      }
+      return res.status(200).send(`${conversationSid} deleted`)
+    }
+    return res.status(200).send('not processed')
+  };
 
-  res.sendStatus(200)
-};
+// Typescript Interfaces
+interface SessionPostBody extends ConversationListInstanceCreateOptions {
+  addresses: Array<string> 
+}
 
 interface SessionDeleteBody {
-  MessagingServiceSid: string;
-  RetryCount: string;
-  EventType: string;
-  DateUpdated: string;
-  State: string;
-  Attributes: string;
-  DateCreated: string;
-  ChatServiceSid: string;
-  AccountSid: string;
-  Source: string;
-  ConversationSid: string;
+  MessagingServiceSid: string
+  RetryCount: string
+  EventType: string
+  DateUpdated: string
+  State: string
+  Attributes: string
+  DateCreated: string
+  ChatServiceSid: string
+  AccountSid: string
+  Source: string
+  ConversationSid: string
 }
 
 interface ActiveProxyAddresses {
