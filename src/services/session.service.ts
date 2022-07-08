@@ -5,26 +5,11 @@ import { listParticipantConversations } from "../utils/listParticipantConversati
 export const getActiveProxyAddresses = async (phoneNumbers: Array<String>) : Promise<ActiveProxyAddresses> => {
   let activeConversations = {}
 
-  const promises = phoneNumbers.map(async (pn: string) => {
-    activeConversations[pn] = listParticipantConversations(pn);
-    await client.conversations.participantConversations
-      .list({address: pn})
-      .then((participantConversations) => {
-        let activeProxyAddresses = participantConversations.map((pc) => {
-          return pc.participantMessagingBinding.proxy_address;
-        })
-
-        return;
-      })
+  phoneNumbers.map(async (phoneNumber: string) => {
+    activeConversations[phoneNumber] = await listParticipantConversations(phoneNumber);
   })
 
-  return Promise.all(promises)
-    .then(() => {
-      return activeConversations;
-    })
-    .catch((err) => {
-      throw `getActiveProxyAddresses: ${err}`
-    })
+  return activeConversations;
 }
 
 export const matchAvailableProxyAddresses = async (activeProxyAddresses: ActiveProxyAddresses) : Promise<ProxyBindings> => {
