@@ -1,10 +1,12 @@
 import client from "../twilioClient";
 import { ActiveProxyAddresses, ProxyBindings } from "../@types/session.types";
-
+import { addParticipant } from "../utils/addParticipant.util";
+import { listParticipantConversations } from "../utils/listParticipantConversations.util";
 export const getActiveProxyAddresses = async (phoneNumbers: Array<String>) : Promise<ActiveProxyAddresses> => {
   let activeConversations = {}
 
   const promises = phoneNumbers.map(async (pn: string) => {
+    activeConversations[pn] = listParticipantConversations(pn);
     await client.conversations.participantConversations
       .list({address: pn})
       .then((participantConversations) => {
@@ -12,7 +14,6 @@ export const getActiveProxyAddresses = async (phoneNumbers: Array<String>) : Pro
           return pc.participantMessagingBinding.proxy_address;
         })
 
-        activeConversations[pn] = activeProxyAddresses;
         return;
       })
   })
@@ -42,28 +43,13 @@ export const matchAvailableProxyAddresses = async (activeProxyAddresses: ActiveP
   return proxyBindings;
 }
 
-export const addParticipantsToConversation = (conversationSid: string, proxyBindings: ProxyBindings) => {
-  let promises = [];
-
+export const addParticipantsToConversation = async (conversationSid: string, proxyBindings: ProxyBindings) => {
   for (const [key, value] of Object.entries(proxyBindings)) {
     const participant = {
       'messagingBinding.address': key,
       'messagingBinding.proxyAddress': value
     } as any
 
-    const request = client.conversations
-      .conversations(conversationSid)
-      .participants
-      .create(participant)
-      .then((p) => {
-        console.log(p.sid);
-        return p.sid;
-      })
-      .catch((err) => { throw `addParticipantsToConversation: ${err}`})
-    
-    promises.push(request);
+    await addParticipant(conversationSid, participant)    
   }
-
-  return Promise.all(promises)
-    .catch((err) => { throw `addParticipantsToConversation: ${err}`});
 }

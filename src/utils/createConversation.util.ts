@@ -2,9 +2,15 @@ import { ConversationInstance } from "twilio/lib/rest/conversations/v1/conversat
 import { SessionPostBody } from "../@types/session.types"; 
 import client from "../twilioClient";
 
+import retry from 'async-retry';
+
 export const createConversation = async (options: SessionPostBody) : Promise<ConversationInstance> => {
-  return await client.conversations.conversations
-    .create(options)
-    .then((c) => { return c })
-    .catch((err) => { throw `createConversation: ${err}` });
+  return retry(async () => {
+    try {
+      const conversation = await client.conversations.conversations.create(options);
+      return conversation;
+    } catch (err) {
+      throw `createConversation: ${err}`;
+    }
+  })
 }

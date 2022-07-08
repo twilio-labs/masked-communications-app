@@ -25,3 +25,8 @@ export interface ActiveProxyAddresses {
 export interface ProxyBindings {
   [key: string]: string;
 }
+
+export interface ConversationParticipant {
+  'messagingBinding.address': string;
+  'messagingBinding.proxyAddress': string;
+}
