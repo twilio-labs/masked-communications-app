@@ -1,7 +1,6 @@
-import client from "../twilioClient";
 import { ActiveProxyAddresses, ProxyBindings } from "../@types/session.types";
-import { addParticipant } from "../utils/addParticipant.util";
-import { listParticipantConversations } from "../utils/listParticipantConversations.util";
+import { listParticipantConversations, addParticipant } from "../utils";
+
 export const getActiveProxyAddresses = async (phoneNumbers: Array<String>) : Promise<ActiveProxyAddresses> => {
   let activeConversations = {}
 

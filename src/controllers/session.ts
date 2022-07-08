@@ -6,8 +6,7 @@ import {
   matchAvailableProxyAddresses,
   addParticipantsToConversation, } from "../services/session.service";
 
-import { deleteConversation } from "../utils/deleteConveresation.util";
-import { createConversation } from "../utils/createConversation.util";
+import { createConversation, deleteConversation } from "../utils";
 
 export const post = async (
   req: Request<{}, {}, SessionPostBody>,
