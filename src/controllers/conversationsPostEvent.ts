@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { ConversationsPostEventBody } from "../@types/session.types";
-import { deleteConversation } from "../utils/deleteConveresation.util";
+import { deleteConversation } from "../utils/deleteConversation.util";
 
 export const post = async (
   req: Request<{}, {}, ConversationsPostEventBody>,
