@@ -21,6 +21,7 @@ export const post = async (
   try {
     await addParticipantsToConversation(conversation.sid, proxyAddresses)
     res.setHeader('content-type', 'application/json');
+    console.log(conversation)
     return res.status(200).send(`${JSON.stringify(conversation)}`);
   } catch(err) {
     await deleteConversation(conversation.sid);
