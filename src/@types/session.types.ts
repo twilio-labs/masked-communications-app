@@ -1,3 +1,4 @@
+import type { Request } from "express";
 import { ConversationListInstanceCreateOptions } from "twilio/lib/rest/conversations/v1/conversation";
 
 export interface SessionPostBody extends ConversationListInstanceCreateOptions {
@@ -29,4 +30,10 @@ export interface ProxyBindings {
 export interface ConversationParticipant {
   'messagingBinding.address': string;
   'messagingBinding.proxyAddress': string;
+}
+
+export interface JoinConferenceParams extends Request {
+  params: {
+    conferenceName: string
+  }
 }

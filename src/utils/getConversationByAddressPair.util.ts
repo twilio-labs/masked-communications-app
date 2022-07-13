@@ -5,7 +5,7 @@ export const getConversationByAddressPair = async (address: string, proxyAddress
   if (address === undefined) {
     throw "getOpenConversationsForAddressPair: address is missing";
   }
-  const params = {address: address, limit: 500};
+  const params = { address: address };
 
   const participantConversations = await client.conversations.participantConversations.list(params);
   const conversation = participantConversations.find(p => {

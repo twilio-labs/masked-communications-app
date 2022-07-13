@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
-import { twiml } from 'twilio'
+import VoiceResponse from "twilio/lib/twiml/VoiceResponse";
+
 import { getConversationByAddressPair } from "../utils/getConversationByAddressPair.util";
-const { VoiceResponse } = twiml
 
 import client from '../twilioClient'
 
@@ -22,21 +22,47 @@ const generateTwiml = async (to: string, from: string) => {
       .participants
       .list()
 
-    const otherParticipants = participants.filter((participant) => {
-      if (participant.messagingBinding.address !== from) {
-        return participant;
+    const participantsToDial = participants.reduce((result, p) => {
+      if (p.messagingBinding.type === "sms" && p.messagingBinding.address != from) {
+          console.log(`Adding ${p.messagingBinding.address} to list of numbers to dial.\n`)
+
+          result.push({
+              address: p.messagingBinding.address,
+              proxyAddress: p.messagingBinding.proxy_address
+          })
       }
-    })
+
+      return result;
+    }, [])
 
     response.say({
       voice: process.env.CALL_ANNOUCEMENT_VOICE as any,
       language: process.env.CALL_ANNOUCEMENT_LANGUAGE as any
     }, process.env.CONNECTING_CALL_ANNOUCEMENT);
 
-    if (otherParticipants.length > 1) {
-      // Converence Participants
+    if (participantsToDial.length > 1) {
+      const conferenceName = `${from}_at_${Date.now()}`
+
+      const callPromises = participantsToDial.map(pa => {
+          console.log(`Dialing ${pa.address} from ${pa.proxyAddress}...`);
+
+          return client.calls.create({
+              url: `https://${process.env.DOMAIN}/join-conference?conferenceName=${encodeURIComponent(conferenceName)}`,
+              to: pa.address,
+              from: pa.proxyAddress
+          });
+      });
+
+      await Promise.all(callPromises)
+
+      const dial = response.dial();
+      dial.conference({
+          endConferenceOnExit: true
+      }, conferenceName);
+
+
     } else {
-      const callee = otherParticipants[0]
+      const callee = participantsToDial[0]
       const dial = response.dial({
         callerId: callee.messagingBinding.proxy_address
       });
@@ -57,7 +83,7 @@ export const post = async (
   const { body } = req.body;
   const { to, from } = body;
 
-  const twiml = generateTwiml(to, from);
+  const twiml = await generateTwiml(to, from);
 
   res.set('Content-Type', 'text/xml')
   res.send(twiml.toString())
