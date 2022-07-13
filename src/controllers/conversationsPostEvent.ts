@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { ConversationsPostEventBody } from "../@types/session.types";
+import { ConversationsPostEventBody } from "../@types/types";
 import { deleteConversation } from "../utils/deleteConversation.util";
 
 export const post = async (

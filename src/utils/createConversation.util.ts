@@ -1,5 +1,5 @@
 import { ConversationInstance } from "twilio/lib/rest/conversations/v1/conversation";
-import { SessionPostBody } from "../@types/session.types"; 
+import { SessionPostBody } from "../@types/types"; 
 import client from "../twilioClient";
 
 import retry from 'async-retry';

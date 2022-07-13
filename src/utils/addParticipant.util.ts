@@ -1,9 +1,11 @@
-import { ConversationParticipant } from "../@types/session.types";
 import retry from 'async-retry';
 import client from "../twilioClient";
-import { ParticipantListInstanceCreateOptions } from "twilio/lib/rest/conversations/v1/conversation/participant";
+import { ParticipantInstance, ParticipantListInstanceCreateOptions } from "twilio/lib/rest/conversations/v1/conversation/participant";
 
-export const addParticipant = (conversationSid: string, participant: ParticipantListInstanceCreateOptions) => {
+export const addParticipant = (
+  conversationSid: string,
+  participant: ParticipantListInstanceCreateOptions
+) : Promise<ParticipantInstance> => {
   return retry(async () => {
     try {
       const createdParticipant = await client.conversations

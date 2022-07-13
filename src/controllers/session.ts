@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { SessionPostBody } from "../@types/session.types";
+import { SessionPostBody } from "../@types/types";
 
 import {
   getActiveProxyAddresses,

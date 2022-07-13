@@ -1,5 +1,5 @@
-import type { Request, Response } from "express";
-import { JoinConferenceParams } from "../@types/session.types";
+import type { Response } from "express";
+import { JoinConferenceParams } from "../@types/types";
 import VoiceResponse from "twilio/lib/twiml/VoiceResponse";
 
 function joinConferenceTwiml (conferenceName: string) : VoiceResponse {

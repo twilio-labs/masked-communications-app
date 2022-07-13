@@ -1,4 +1,4 @@
-import { ActiveProxyAddresses, ProxyBindings } from "../@types/session.types";
+import { ActiveProxyAddresses, ProxyBindings } from "../@types/types";
 import { listParticipantConversations, addParticipant } from "../utils";
 
 export const getActiveProxyAddresses = async (phoneNumbers: Array<String>) : Promise<ActiveProxyAddresses> => {
