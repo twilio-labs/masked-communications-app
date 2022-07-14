@@ -12,6 +12,7 @@ export const addParticipant = (
         .conversations(conversationSid)
         .participants
         .create(participant)
+      console.log({createdParticipant})
       return createdParticipant
     } catch (err) {
       throw err

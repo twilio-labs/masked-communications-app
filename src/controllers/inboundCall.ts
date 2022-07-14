@@ -5,7 +5,7 @@ import { getConversationByAddressPair } from "../utils/getConversationByAddressP
 
 import client from '../twilioClient'
 
-const generateTwiml = async (to: string, from: string) => {
+const generateTwiml = async (from: string, to: string) => {
   let response = new VoiceResponse();
 
   const conversation = await getConversationByAddressPair(from, to)
@@ -81,9 +81,13 @@ export const post = async (
   res: Response
 ) => {
   const { body } = req.body;
-  const { to, from } = body;
 
-  const twiml = await generateTwiml(to, from);
+  const from = req.body.From
+  const called = req.body.Called
+  console.log(req.body.From)
+  console.log(req.body.Called)
+
+  const twiml = await generateTwiml(from, called);
 
   res.set('Content-Type', 'text/xml')
   res.send(twiml.toString())

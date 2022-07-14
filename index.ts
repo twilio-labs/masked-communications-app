@@ -3,6 +3,7 @@ import express from "express";
 import createError from "http-errors";
 import logger from "morgan";
 import router from "./src/routes";
+import bodyParser from 'body-parser';
 
 const PORT = process.env.PORT || 3000;
 
@@ -16,6 +17,7 @@ if (app.get("env") === "development") {
   app.use(logger("dev"));
 }
 
+app.use(bodyParser.json())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

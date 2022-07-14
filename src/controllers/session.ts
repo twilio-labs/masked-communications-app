@@ -19,7 +19,9 @@ export const post = async (
   const conversation = await createConversation(req.body)
 
   try {
-    await addParticipantsToConversation(conversation.sid, proxyAddresses)
+    console.log('adding participants')
+    const participants = await addParticipantsToConversation(conversation.sid, proxyAddresses)
+    console.log(participants)
     res.setHeader('content-type', 'application/json');
     console.log(conversation)
     return res.status(200).send(`${JSON.stringify(conversation)}`);
