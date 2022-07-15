@@ -14,14 +14,13 @@ export const getActiveProxyAddresses = async (phoneNumbers: Array<String>) : Pro
     return activeConversations[phoneNumber] = proxyAddresses
   })
 
-  return Promise.all(promises)
-    .then(() => {
-      return activeConversations;
-    })
-    .catch(err => {
-      console.log(err)
-      throw new Error(err)
-    })
+  try {
+    await Promise.all(promises)
+    return activeConversations;
+  } catch(err) {
+    console.log(err)
+    throw new Error(err)    
+  }
 }
 
 export const matchAvailableProxyAddresses = async (activeProxyAddresses: ActiveProxyAddresses) : Promise<ProxyBindings> => {
@@ -68,12 +67,11 @@ export const addParticipantsToConversation = async (conversationSid: string, pro
     }
   }
 
-  return Promise.all(promises)
-    .then((results) => {
-      return results
-    })
-    .catch(err => {
-      console.log(err)
-      throw new Error(err)
-    })
+  try {
+    const results = await Promise.all(promises)
+    return results
+  } catch(err) {
+    console.log(err)
+    throw new Error(err)
+  }
 }
