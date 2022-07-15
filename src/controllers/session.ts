@@ -12,18 +12,14 @@ export const post = async (
   req: Request<{}, {}, SessionPostBody>,
   res: Response
 ) => {
-  console.log(req.body);
   const phoneNumbers = req.body.addresses;
-  const activeProxyAddresses = await getActiveProxyAddresses(phoneNumbers); 
+  const activeProxyAddresses = await getActiveProxyAddresses(phoneNumbers);
   const proxyAddresses = await matchAvailableProxyAddresses(activeProxyAddresses);
   const conversation = await createConversation(req.body)
 
   try {
-    console.log('adding participants')
-    const participants = await addParticipantsToConversation(conversation.sid, proxyAddresses)
-    console.log(participants)
+    await addParticipantsToConversation(conversation.sid, proxyAddresses)
     res.setHeader('content-type', 'application/json');
-    console.log(conversation)
     return res.status(200).send(`${JSON.stringify(conversation)}`);
   } catch(err) {
     await deleteConversation(conversation.sid);

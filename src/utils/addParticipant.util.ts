@@ -2,7 +2,7 @@ import retry from 'async-retry';
 import client from "../twilioClient";
 import { ParticipantInstance, ParticipantListInstanceCreateOptions } from "twilio/lib/rest/conversations/v1/conversation/participant";
 
-export const addParticipant = (
+export const addParticipant = async (
   conversationSid: string,
   participant: ParticipantListInstanceCreateOptions
 ) : Promise<ParticipantInstance> => {
@@ -15,7 +15,8 @@ export const addParticipant = (
       console.log({createdParticipant})
       return createdParticipant
     } catch (err) {
-      throw err
+      console.log('Create participant err', err);
+      throw new Error(err)
     }
   })
 }

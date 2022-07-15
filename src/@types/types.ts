@@ -20,7 +20,7 @@ export interface ConversationsPostEventBody {
 }
 
 export interface ActiveProxyAddresses {
-  [key: string]: Array<string>;
+  [key: string]: Array<String>;
 }
 
 export interface ProxyBindings {
