@@ -4,7 +4,9 @@
     "cors": "^2.8.5",
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
+    "google-libphonenumber": "^3.2.27",
     "http-errors": "^2.0.0",
+    "lokijs": "1.5.12",
     "morgan": "^1.10.0",
     "twilio": "^3.78.0"
   },
