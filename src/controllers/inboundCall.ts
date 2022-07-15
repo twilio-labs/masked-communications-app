@@ -64,10 +64,10 @@ const generateTwiml = async (from: string, to: string) => {
     } else {
       const callee = participantsToDial[0]
       const dial = response.dial({
-        callerId: callee.messagingBinding.proxy_address
+        callerId: callee.proxyAddress
       });
 
-      dial.number(callee.messagingBinding.address);
+      dial.number(callee.address);
     }
 
   }
