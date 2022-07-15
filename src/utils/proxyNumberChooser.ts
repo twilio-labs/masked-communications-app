@@ -1,21 +1,21 @@
 
 const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
 const loki = require('lokijs');
-const fs = require('fs/promises');
+const fs = require('fs');
 
 
-type Overlays = {
+export type Overlays = {
     [key: string] : Array<string>
 };
 
-type ProxyNumber = {
+export type ProxyNumber = {
     areaCode: string;
     subscriberNumber: string;
     countryCode: string;
     number: string;
 };
   
-type ProxyNumberLookupResult = {
+export type ProxyNumberLookupResult = {
     areaCodeMatches: Array<ProxyNumber>,
     relatedAreaCodeMatches: Array<ProxyNumber>,
     countryCodeMatches: Array<ProxyNumber>,
@@ -23,12 +23,15 @@ type ProxyNumberLookupResult = {
 };
 
 const OVERLAYS_FILE = `${process.cwd()}/areacode-overlays.csv`;
-let OVERLAYS: Overlays = {}
+let OVERLAYS: Overlays = loadOverlays(OVERLAYS_FILE);
 
+// We dont commit this to disk and will require us to load the proxy numbers on start 
 var DB = new loki('maskedcomms.db', {
     autosave: true,
     autoload: true
 });
+const PROXY_NUMBERS = initDBCollection(DB);
+
 
 /*
 * Parses an multiline overlays string with in the format: 
@@ -61,9 +64,9 @@ function parseOverlays(overlaysStr: string) : Overlays {
 /*
 * Reads and parses the overlays from the given file
 */
-async function loadOverlays(fileName) : Promise<Overlays> {
+function loadOverlays(fileName) : Overlays {
     try {
-        const data = await fs.readFile(fileName, { encoding: 'utf8' });
+        const data = fs.readFileSync(fileName, { encoding: 'utf8' });
         const overlays = parseOverlays(data);
         return overlays;
       } catch (err) {
@@ -72,11 +75,11 @@ async function loadOverlays(fileName) : Promise<Overlays> {
       }
 }
 
-function initDBCollection(): any {
-    DB.deleteDatabase( () => {});
-    let proxyNumbers = DB.getCollection('proxy_numbers');
+function initDBCollection(db): any {
+    db.deleteDatabase( () => {});
+    let proxyNumbers = db.getCollection('proxy_numbers');
     if ( proxyNumbers === null) {
-        proxyNumbers = DB.addCollection('proxy_numbers', {
+        proxyNumbers = db.addCollection('proxy_numbers', {
         indices: ['countryCode', 'areaCode', 'number'],
         unique: ['number']});
     }
@@ -84,10 +87,16 @@ function initDBCollection(): any {
   return proxyNumbers;
 }
 
+function loadProxyNumbers(collection, numbers: Array<string>) {
+    for ( let i = 0; i < numbers.length; ++i) {
+        collection.insert(toProxyNumber(numbers[i]));
+    }
+}
+
 /*
 * Finds matching proxy numbers for the given number
 */
-function findProxyNumbers(proxyNumbers, number: ProxyNumber, exceptions: [], areaCodes: Overlays) : ProxyNumberLookupResult {
+export function findProxyNumbers(proxyNumbers, number: ProxyNumber, exceptions: [], areaCodes: Overlays) : ProxyNumberLookupResult {
 
   const ad = proxyNumbers.find({
     'number': {'$nin':exceptions}
@@ -112,7 +121,7 @@ function findProxyNumbers(proxyNumbers, number: ProxyNumber, exceptions: [], are
     }]
   }).data();
 
-  // TODO 1a. look up areaCodes that are related
+  // 1a. Look up areaCodes that are related ie the overlays if we have any
   var relatedAreaCodeMatches: Array<ProxyNumber> = []
   if ( number.areaCode && (number.areaCode in areaCodes)) {
     var relatedAreaCodeResulset = allAvailableNumbers.branch();
@@ -149,7 +158,7 @@ function findProxyNumbers(proxyNumbers, number: ProxyNumber, exceptions: [], are
 }
 
 // Converts the given aNumber into a ProxyNumber
-function toProxyNumber(aNumber: string) : ProxyNumber {
+export function toProxyNumber(aNumber: string) : ProxyNumber {
   const number = phoneUtil.parse(aNumber, 'US');
 
   const nationalSignificantNumber = phoneUtil.getNationalSignificantNumber(number);
@@ -174,10 +183,55 @@ function toProxyNumber(aNumber: string) : ProxyNumber {
 
 // Test function
 module.exports.testNumberChooser =  async function() {
-    OVERLAYS = await loadOverlays(OVERLAYS_FILE);
-    const proxyNumbers = initDBCollection();
+    const proxyNumbers = PROXY_NUMBERS;
 
-    // Add number pool as collection to db
+    // Load from the env
+    const pool = process.env.NUMBER_POOL.split(',');
+    loadProxyNumbers(proxyNumbers, pool);
+
+    // Let's load some more Add number pool as collection to db
+    proxyNumbers.insert(toProxyNumber('+19252148777'));
+    proxyNumbers.insert(toProxyNumber('+19256398375'));
+    proxyNumbers.insert(toProxyNumber('+15103067446'));
+    proxyNumbers.insert(toProxyNumber('+61393065343'));
+    proxyNumbers.insert(toProxyNumber('+971528976883'));
+    proxyNumbers.insert(toProxyNumber('+13328990001'));
+    proxyNumbers.insert(toProxyNumber('+19178990001'));
+    proxyNumbers.insert(toProxyNumber('+12128990001'));
+    proxyNumbers.insert(toProxyNumber('+72128990001'));
+
+    // Get all proxy numbers that we can use for this participant
+    let results = findProxyNumbers(proxyNumbers, toProxyNumber('+12128999591'), [], OVERLAYS);
+    console.log('+12128999591:', results);
+
+    results = findProxyNumbers(proxyNumbers, toProxyNumber('+15109885555'), [], OVERLAYS);
+    console.log('+15109885555:', results);    
+
+    results = findProxyNumbers(proxyNumbers, toProxyNumber('+19252149090'), [], OVERLAYS);
+    console.log('+19252149090:', results);
+
+    results = findProxyNumbers(proxyNumbers, toProxyNumber('+971528970909'), [], OVERLAYS);
+    console.log('+971528970909:', results);
+
+    results = findProxyNumbers(proxyNumbers, toProxyNumber('+61393065999'), [], OVERLAYS);
+    console.log('+61393065999:', results);
+
+    results = findProxyNumbers(proxyNumbers, toProxyNumber('+71238769090'), [], OVERLAYS);
+    console.log('+71238769090:', results);
+
+    results = findProxyNumbers(proxyNumbers, toProxyNumber('+9611238769090'), [], OVERLAYS);
+    console.log('+9611238769090:', results);
+}
+
+// Test function
+module.exports.stressTestNumberChooser =  async function() {
+    const proxyNumbers = PROXY_NUMBERS;
+
+    // Load from the env
+    const pool = process.env.NUMBER_POOL.split(',');
+    loadProxyNumbers(proxyNumbers, pool);
+
+    // Let's load some more Add number pool as collection to db
     proxyNumbers.insert(toProxyNumber('+19252148777'));
     proxyNumbers.insert(toProxyNumber('+19256398375'));
     proxyNumbers.insert(toProxyNumber('+15103067446'));
@@ -190,28 +244,17 @@ module.exports.testNumberChooser =  async function() {
 
     console.time();
     // Get all proxy numbers that we can use for this participant
-    let results = findProxyNumbers(proxyNumbers, toProxyNumber('+12128999591'), [], OVERLAYS);
-    //console.log('+12128999591:', results);
 
     for ( let i = 0; i < 100000; ++i) {
-        results = findProxyNumbers(proxyNumbers, toProxyNumber('+15109885555'), [], OVERLAYS);
-        //console.log('+15109885555:', results);    
+        findProxyNumbers(proxyNumbers, toProxyNumber('+12128999591'), [], OVERLAYS);
+        findProxyNumbers(proxyNumbers, toProxyNumber('+15109885555'), [], OVERLAYS);
+        findProxyNumbers(proxyNumbers, toProxyNumber('+19252149090'), [], OVERLAYS);
+        findProxyNumbers(proxyNumbers, toProxyNumber('+971528970909'), [], OVERLAYS);
+        findProxyNumbers(proxyNumbers, toProxyNumber('+61393065999'), [], OVERLAYS);
+        findProxyNumbers(proxyNumbers, toProxyNumber('+71238769090'), [], OVERLAYS);
+        findProxyNumbers(proxyNumbers, toProxyNumber('+9611238769090'), [], OVERLAYS);
     }
-
-    results = findProxyNumbers(proxyNumbers, toProxyNumber('+19252149090'), [], OVERLAYS);
-    //console.log('+19252149090:', results);
-
-    results = findProxyNumbers(proxyNumbers, toProxyNumber('+971528970909'), [], OVERLAYS);
-    //console.log('+971528970909:', results);
-
-    results = findProxyNumbers(proxyNumbers, toProxyNumber('+61393065999'), [], OVERLAYS);
-    //console.log('+61393065999:', results);
-
-    results = findProxyNumbers(proxyNumbers, toProxyNumber('+71238769090'), [], OVERLAYS);
-    //console.log('+71238769090:', results);
-
-    results = findProxyNumbers(proxyNumbers, toProxyNumber('+9611238769090'), [], OVERLAYS);
-    //console.log('+9611238769090:', results);
+    
     console.timeEnd();
 }
 
