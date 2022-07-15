@@ -1,38 +1,80 @@
 
 const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
 const loki = require('lokijs');
+const fs = require('fs/promises');
+
+
+type Overlays = {
+    [key: string] : Array<string>
+};
 
 type ProxyNumber = {
-  areaCode: string;
-  subscriberNumber: string;
-  countryCode: string;
-  number: string;
+    areaCode: string;
+    subscriberNumber: string;
+    countryCode: string;
+    number: string;
 };
-
+  
 type ProxyNumberLookupResult = {
-  areaCodeMatches: Array<ProxyNumber>,
-  countryCodeMatches: Array<ProxyNumber>,
-  fallbackMatches: Array<ProxyNumber>
+    areaCodeMatches: Array<ProxyNumber>,
+    relatedAreaCodeMatches: Array<ProxyNumber>,
+    countryCodeMatches: Array<ProxyNumber>,
+    fallbackMatches: Array<ProxyNumber>
 };
 
-var db = new loki('maskedcomms.db', {
-  autosave: true,
-  autoload: true
+const OVERLAYS_FILE = `${process.cwd()}/areacode-overlays.csv`;
+let OVERLAYS: Overlays = {}
+
+var DB = new loki('maskedcomms.db', {
+    autosave: true,
+    autoload: true
 });
 
+function parseOverlays(overlaysStr: string) : Overlays {
+
+    let overlays:  {[key:string]: Array<string>} = {};
+    const overlaysArr = overlaysStr.split('\n');
+
+    for ( let i = 0; i < overlaysArr.length; ++i) {
+        const entry = overlaysArr[i].split('-');
+        const areaCode: string = entry[0];
+        const areaCodes = entry[1].split(',');
+
+        // The csv has has the area code in the list. We want to remove it
+        // as it will allows to create easier search steps
+        let idx = areaCodes.indexOf(areaCode);
+        if ( idx > -1) {
+            areaCodes.splice(idx, 1);
+        }
+        overlays[areaCode] = areaCodes;
+    }
+    return overlays;
+}
+
+async function loadOverlays() : Promise<Overlays> {
+    try {
+        const data = await fs.readFile(OVERLAYS_FILE, { encoding: 'utf8' });
+        const overlays = parseOverlays(data);
+        return overlays;
+      } catch (err) {
+        console.log(err);
+        throw err
+      }
+}
+
 function initDBCollection(): any {
-  let proxyNumbers = db.getCollection('proxy_numbers');
-  if ( proxyNumbers === null) {
-    proxyNumbers = db.addCollection('proxy_numbers', {
-      indices: ['countryCode', 'areaCode', 'number'],
-      unique: ['number']
-    });
-  }
+    DB.deleteDatabase( () => {});
+    let proxyNumbers = DB.getCollection('proxy_numbers');
+    if ( proxyNumbers === null) {
+        proxyNumbers = DB.addCollection('proxy_numbers', {
+        indices: ['countryCode', 'areaCode', 'number'],
+        unique: ['number']});
+    }
 
   return proxyNumbers;
 }
 
-function findProxyNumbers(proxyNumbers, number: ProxyNumber, exceptions: []) : ProxyNumberLookupResult {
+function findProxyNumbers(proxyNumbers, number: ProxyNumber, exceptions: [], areaCodes: Overlays) : ProxyNumberLookupResult {
 
   const ad = proxyNumbers.find({
     'number': {'$nin':exceptions}
@@ -58,14 +100,29 @@ function findProxyNumbers(proxyNumbers, number: ProxyNumber, exceptions: []) : P
   }).data();
 
   // TODO 1a. look up areaCodes that are related
+  var relatedAreaCodeMatches: Array<ProxyNumber> = []
+  if ( number.areaCode && (number.areaCode in areaCodes)) {
+    var relatedAreaCodeResulset = allAvailableNumbers.branch();
+    relatedAreaCodeMatches = relatedAreaCodeResulset.find({
+        '$and' : [{
+          'countryCode': number.countryCode
+        },{
+          'areaCode': {'$in': areaCodes[number.areaCode]}
+        }]
+      }).data();
+  }
 
   // 2nd by country code and other area codes
   var countryCodeResulset = allAvailableNumbers.branch();
+  const allAreaCodes = [number.areaCode];
+  if ( number.areaCode && (number.areaCode in areaCodes)) {
+    allAreaCodes.push(...areaCodes[number.areaCode]);
+  }
   var countryCodeMatches: Array<ProxyNumber> = countryCodeResulset.find({
     '$and' : [{
       'countryCode': number.countryCode
     },{
-      'areaCode': {'$ne': number.areaCode}
+      'areaCode': {'$nin': allAreaCodes}
     }]
   }).data();
 
@@ -75,40 +132,11 @@ function findProxyNumbers(proxyNumbers, number: ProxyNumber, exceptions: []) : P
     'countryCode': {'$ne': number.countryCode}
   }).data();
 
-  return { areaCodeMatches, countryCodeMatches, fallbackMatches};
-}
-
-function logNumberStuff(number: any) : void {
-
-  // Print the phone's national number.
-  console.log(number.getNationalNumber());
-  // Print the phone's extension.
-  console.log(number.getExtension());
-  // Print the phone's extension when compared to i18n.phonenumbers.CountryCodeSource.
-  console.log(number.getCountryCodeSource());
-  // Print the phone's italian leading zero.
-  console.log(number.getItalianLeadingZero());
-  // Print the phone's raw input.
-  console.log(number.getRawInput());
-  // Result from isPossibleNumber().
-  console.log(phoneUtil.isPossibleNumber(number));
-  // Result from isValidNumber().
-  console.log(phoneUtil.isValidNumber(number));
-  // Result from isValidNumberForRegion().
-  console.log(phoneUtil.isValidNumberForRegion(number, 'US'));
-  // Result from getRegionCodeForNumber().
-  console.log(phoneUtil.getRegionCodeForNumber(number));
-  // Result from getNumberType() when compared to i18n.phonenumbers.PhoneNumberType.
-  console.log(phoneUtil.getNumberType(number));
-  // Format number in the out-of-country format from US.
-  console.log(phoneUtil.formatOutOfCountryCallingNumber(number, 'US'));
-  // Format number in the out-of-country format from CH.
-  console.log(phoneUtil.formatOutOfCountryCallingNumber(number, 'CH'));
+  return { areaCodeMatches, relatedAreaCodeMatches, countryCodeMatches, fallbackMatches};
 }
 
 function toProxyNumber(aNumber: string) : ProxyNumber {
   const number = phoneUtil.parse(aNumber, 'US');
-  logNumberStuff(number);
 
   const nationalSignificantNumber = phoneUtil.getNationalSignificantNumber(number);
   var areaCode;
@@ -122,30 +150,50 @@ function toProxyNumber(aNumber: string) : ProxyNumber {
     subscriberNumber = nationalSignificantNumber;
   }
 
-  const proxyNumber: ProxyNumber = {
+  return {
     areaCode: areaCode,
     subscriberNumber:subscriberNumber,
     countryCode: number.getCountryCode(),
     number: aNumber
    };
-
-   return proxyNumber;
 }
 
-
-  module.exports.testNumberChooser = function() {
+module.exports.testNumberChooser =  async function() {
+    OVERLAYS = await loadOverlays();
     const proxyNumbers = initDBCollection();
 
+    // Add number pool as collection to db
     proxyNumbers.insert(toProxyNumber('+19252148777'));
     proxyNumbers.insert(toProxyNumber('+19256398375'));
     proxyNumbers.insert(toProxyNumber('+15103067446'));
     proxyNumbers.insert(toProxyNumber('+61393065343'));
     proxyNumbers.insert(toProxyNumber('+971528976883'));
+    proxyNumbers.insert(toProxyNumber('+13328990001'));
+    proxyNumbers.insert(toProxyNumber('+19178990001'));
+    proxyNumbers.insert(toProxyNumber('+12128990001'));
+    proxyNumbers.insert(toProxyNumber('+72128990001'));
 
-    const testNumnber = toProxyNumber('+19255551234');
+    // Get all proxy numbers that we can use for this participant
+    let results = findProxyNumbers(proxyNumbers, toProxyNumber('+12128999591'), [], OVERLAYS);
+    console.log('+12128999591:', results);
 
-    let results = findProxyNumbers(proxyNumbers, testNumnber, []);
-    console.log(results);
-  }
+    results = findProxyNumbers(proxyNumbers, toProxyNumber('+15109885555'), [], OVERLAYS);
+    console.log('+15109885555:', results);
 
-  module.exports.testNumberChooser();
+    results = findProxyNumbers(proxyNumbers, toProxyNumber('+19252149090'), [], OVERLAYS);
+    console.log('+19252149090:', results);
+
+    results = findProxyNumbers(proxyNumbers, toProxyNumber('+971528970909'), [], OVERLAYS);
+    console.log('+971528970909:', results);
+
+    results = findProxyNumbers(proxyNumbers, toProxyNumber('+61393065999'), [], OVERLAYS);
+    console.log('+61393065999:', results);
+
+    results = findProxyNumbers(proxyNumbers, toProxyNumber('+71238769090'), [], OVERLAYS);
+    console.log('+71238769090:', results);
+
+    results = findProxyNumbers(proxyNumbers, toProxyNumber('+9611238769090'), [], OVERLAYS);
+    console.log('+9611238769090:', results);
+}
+
+module.exports.testNumberChooser();
