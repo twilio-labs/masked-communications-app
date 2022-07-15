@@ -52,7 +52,12 @@ export const generateTwiml = async (from: string, to: string) => {
           });
       });
 
-      await Promise.all(callPromises)
+      try {
+        await Promise.all(callPromises)
+      } catch(err) {
+        console.log(err)
+        throw new Error(err)
+      }
 
       const dial = response.dial();
       dial.conference({
