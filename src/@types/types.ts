@@ -24,7 +24,7 @@ export interface ActiveProxyAddresses {
 }
 
 export interface ProxyBindings {
-  [key: string]: string;
+  [key: string]: Array<string>;
 }
 
 export interface ConversationParticipant {

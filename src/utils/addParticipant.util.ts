@@ -12,7 +12,7 @@ export const addParticipant = async (
         .conversations(conversationSid)
         .participants
         .create(participant)
-      console.log({createdParticipant})
+
       return createdParticipant
     } catch (err) {
       console.log('Create participant err', err);
