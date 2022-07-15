@@ -30,6 +30,13 @@ var DB = new loki('maskedcomms.db', {
     autoload: true
 });
 
+/*
+* Parses an multiline overlays string with in the format: 
+* areaCode1-overlayAreaCode1[,overlayAreaCode2[,...]]
+* areaCode2-overlayAreaCode1[,overlayAreaCode2[,...]]
+* and returns an Overlays map
+* Note this funciton will remove the areaCode from the list of overlays
+*/
 function parseOverlays(overlaysStr: string) : Overlays {
 
     let overlays:  {[key:string]: Array<string>} = {};
@@ -51,9 +58,12 @@ function parseOverlays(overlaysStr: string) : Overlays {
     return overlays;
 }
 
-async function loadOverlays() : Promise<Overlays> {
+/*
+* Reads and parses the overlays from the given file
+*/
+async function loadOverlays(fileName) : Promise<Overlays> {
     try {
-        const data = await fs.readFile(OVERLAYS_FILE, { encoding: 'utf8' });
+        const data = await fs.readFile(fileName, { encoding: 'utf8' });
         const overlays = parseOverlays(data);
         return overlays;
       } catch (err) {
@@ -74,6 +84,9 @@ function initDBCollection(): any {
   return proxyNumbers;
 }
 
+/*
+* Finds matching proxy numbers for the given number
+*/
 function findProxyNumbers(proxyNumbers, number: ProxyNumber, exceptions: [], areaCodes: Overlays) : ProxyNumberLookupResult {
 
   const ad = proxyNumbers.find({
@@ -135,6 +148,7 @@ function findProxyNumbers(proxyNumbers, number: ProxyNumber, exceptions: [], are
   return { areaCodeMatches, relatedAreaCodeMatches, countryCodeMatches, fallbackMatches};
 }
 
+// Converts the given aNumber into a ProxyNumber
 function toProxyNumber(aNumber: string) : ProxyNumber {
   const number = phoneUtil.parse(aNumber, 'US');
 
@@ -158,8 +172,9 @@ function toProxyNumber(aNumber: string) : ProxyNumber {
    };
 }
 
+// Test function
 module.exports.testNumberChooser =  async function() {
-    OVERLAYS = await loadOverlays();
+    OVERLAYS = await loadOverlays(OVERLAYS_FILE);
     const proxyNumbers = initDBCollection();
 
     // Add number pool as collection to db
@@ -173,27 +188,31 @@ module.exports.testNumberChooser =  async function() {
     proxyNumbers.insert(toProxyNumber('+12128990001'));
     proxyNumbers.insert(toProxyNumber('+72128990001'));
 
+    console.time();
     // Get all proxy numbers that we can use for this participant
     let results = findProxyNumbers(proxyNumbers, toProxyNumber('+12128999591'), [], OVERLAYS);
-    console.log('+12128999591:', results);
+    //console.log('+12128999591:', results);
 
-    results = findProxyNumbers(proxyNumbers, toProxyNumber('+15109885555'), [], OVERLAYS);
-    console.log('+15109885555:', results);
+    for ( let i = 0; i < 100000; ++i) {
+        results = findProxyNumbers(proxyNumbers, toProxyNumber('+15109885555'), [], OVERLAYS);
+        //console.log('+15109885555:', results);    
+    }
 
     results = findProxyNumbers(proxyNumbers, toProxyNumber('+19252149090'), [], OVERLAYS);
-    console.log('+19252149090:', results);
+    //console.log('+19252149090:', results);
 
     results = findProxyNumbers(proxyNumbers, toProxyNumber('+971528970909'), [], OVERLAYS);
-    console.log('+971528970909:', results);
+    //console.log('+971528970909:', results);
 
     results = findProxyNumbers(proxyNumbers, toProxyNumber('+61393065999'), [], OVERLAYS);
-    console.log('+61393065999:', results);
+    //console.log('+61393065999:', results);
 
     results = findProxyNumbers(proxyNumbers, toProxyNumber('+71238769090'), [], OVERLAYS);
-    console.log('+71238769090:', results);
+    //console.log('+71238769090:', results);
 
     results = findProxyNumbers(proxyNumbers, toProxyNumber('+9611238769090'), [], OVERLAYS);
-    console.log('+9611238769090:', results);
+    //console.log('+9611238769090:', results);
+    console.timeEnd();
 }
 
 module.exports.testNumberChooser();
