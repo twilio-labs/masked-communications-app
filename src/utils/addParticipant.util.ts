@@ -6,7 +6,7 @@ export const addParticipant = async (
   conversationSid: string,
   participant: ParticipantListInstanceCreateOptions
 ) : Promise<ParticipantInstance> => {
-  return retry(async () => {
+  return retry(async (quit) => {
     try {
       const createdParticipant = await client.conversations
         .conversations(conversationSid)
@@ -15,8 +15,13 @@ export const addParticipant = async (
 
       return createdParticipant
     } catch (err) {
-      console.log('Create participant err', err);
-      throw new Error(err)
+      if (err.status !== 429) {
+        quit(new Error(err));
+        return;
+      }
+
+      console.log('Re-trying on 429 error');
+      throw new Error(err);
     }
   })
 }

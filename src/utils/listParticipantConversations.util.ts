@@ -3,13 +3,18 @@ import { ParticipantConversationInstance } from 'twilio/lib/rest/conversations/v
 import client from '../twilioClient'
 
 export const listParticipantConversations = async (phoneNumber: string) : Promise<ParticipantConversationInstance[]> => {
-  return retry(async () => {
+  return retry(async (quit) => {
     try {
       const activeConversations = await client.conversations.participantConversations.list({address: phoneNumber})
       return activeConversations
     } catch (err) {
-      console.log(phoneNumber, err)
-      throw new Error(err)
+      if (err.status !== 429) {
+        quit(new Error(err));
+        return;
+      }
+
+      console.log('Re-trying on 429 error');
+      throw new Error(err);
     }
   })
 
