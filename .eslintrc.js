@@ -10,4 +10,15 @@ module.exports = {
     sourceType: "module",
   },
   rules: {},
+  overrides: [
+    {
+      files: [
+        "**/*.test.js",
+        "**/*.test.ts"
+      ],
+      env: {
+        jest: true
+      }
+    }
+  ]
 };
