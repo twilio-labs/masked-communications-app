@@ -1,3 +1,5 @@
+[![Tests](https://github.com/aymenn/masked-comms-app/actions/workflows/test.yml/badge.svg)](https://github.com/aymenn/masked-comms-app/actions/workflows/test.yml)
+
 # About
 This is an example masked communicaiton application that demonstrates how build it by using [Conversations API](https://twilio.com/docs/conversations) and [Programmable Voice](https://twilio.com/docs/voice).
 
