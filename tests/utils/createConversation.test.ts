@@ -1,6 +1,3 @@
-import dotenv from 'dotenv'
-dotenv.config()
-
 import { ConversationInstance } from 'twilio/lib/rest/conversations/v1/conversation'
 import { CreateConversation } from "../../src/utils/createConversation.util"
 
