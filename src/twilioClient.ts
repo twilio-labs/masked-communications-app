@@ -1,4 +1,5 @@
 import twilio from "twilio";
+require('dotenv').config(); // Needed to work with jest
 
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN } = process.env;
 
