@@ -24,6 +24,9 @@ This application supports masking communicaitons between SMS, WhatsApp, and voic
 7. Start your npm server
 > npm start
 
+# Authorization
+This app protects API calls to /sessions with basic auth. You can set your basic auth username and password in the .env file.
+
 # Using
 This application provides an endpoint to create a conversation for participants to communicate and a landing page to simplify getting started.
 
