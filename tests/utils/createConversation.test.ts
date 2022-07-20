@@ -1,15 +1,28 @@
-import { ConversationInstance } from 'twilio/lib/rest/conversations/v1/conversation'
-import { CreateConversation } from "../../src/utils/createConversation.util"
+import { createConversation } from "../../src/utils";
+import client from '../../src/twilioClient'
 
-describe('conversations service', () => {
-  const mockValue = {} as ConversationInstance
-  const testInstance = new CreateConversation
+jest.mock('../../src/twilioClient')
+let mockedClient = jest.mocked(client, true)
+
+describe('createConversation util', () => {
+  beforeEach(() => {
+    jest.resetAllMocks()
+  })
   
-  let spy = jest.spyOn(testInstance, 'callCreate').mockResolvedValue(mockValue) 
+  it('it creates conversation with options passed', async () => {
+    const createSpy = jest.fn((options) => {})
+    mockedClient['conversations'] = {
+      conversations: {
+        create: (options) => createSpy(options)
+      }
+    } as any
 
-  test("It creates a conversation", async () => {
-    await testInstance.createConversation({friendlyName: 'test', addresses: ['1', '2']})
-    expect(spy).toBeCalled()
+    createConversation({ friendlyName: "my conversation", addresses: ['1', '2'] })
+    
+    expect(createSpy).toBeCalledWith({ friendlyName: "my conversation", addresses: ['1', '2'] })
+  })
+
+  it('calls quit if error is not a 429 retry', async () => {
+    
   })
 })
-
