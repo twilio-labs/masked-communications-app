@@ -8,10 +8,10 @@ export const createConversation = async (options: SessionPostBody) : Promise<Con
 
   return retry(async (quit) => {
     try {
-      const conversation = await client.conversations.conversations.create(options);
-      return conversation;
+      return client.conversations.conversations.create(options);
     } catch (err) {
       if (err.status !== 429) {
+        console.log('Quit without retry')
         console.log(err)
         quit(new Error('Quit without retry'));
         return;
