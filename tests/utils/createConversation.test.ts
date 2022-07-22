@@ -40,4 +40,37 @@ describe('createConversation util', () => {
       expect(consoleSpy).toHaveBeenCalledWith('Quit without retry');
     }
   })
+
+  it('throws error to retry on 429 status code', async () => {
+
+    interface TwilioError extends Error {
+      status: number
+    }
+
+    class TwilioError extends Error {
+      constructor(message) {
+        super(message);
+        this.name = "ConcurrencyLimit";
+        this.status = 429
+      }
+    }
+
+    mockedClient['conversations'] = {
+      conversations: {
+        create: (options) => {
+          throw new TwilioError('Too many requests')
+        }
+      }
+    } as any
+
+    const consoleSpy = jest.spyOn(console, 'log');
+
+    try {
+      await createConversation(
+        { friendlyName: "my conversation", addresses: ['1', '2']},
+        { retries: 0, factor: 1, maxTimeout: 0, minTimeout: 0 });
+    } catch (e) {
+      expect(consoleSpy).toHaveBeenCalledWith('Re-trying on 429 error');
+    }
+  })
 })

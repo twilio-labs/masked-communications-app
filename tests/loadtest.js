@@ -9,6 +9,8 @@ const client = twilio(
   process.env.TWILIO_AUTH_TOKEN
 );
 
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 async function makeRequest(contacts) {
   const body = { addresses: contacts }
   
@@ -43,6 +45,7 @@ async function runTest() {
       
       const promise = makeRequest(contacts)
       requests.push(promise);
+      await sleep(2)
     }
     
     results = await Promise.allSettled(requests);
@@ -50,6 +53,9 @@ async function runTest() {
   } catch(e) {
     console.error(`failed ${JSON.stringify(e)}`);
   } finally {
+
+    const deletePromises = []
+
     for (let i = 0; i < results.length; ++i) {
       const response = results[i];
       
@@ -63,13 +69,23 @@ async function runTest() {
           if (response.value.sid) {
             console.log(`Removing conversation ${response.value.sid}`);
           }
-          await client.conversations.conversations(response.value.sid).remove()
-
+          const deletePromise = client.conversations.conversations(response.value.sid).remove()
+          deletePromises.push(deletePromise)
         }
       } catch(e){
         console.error(`Couldnt delete convo ${results[i]}: ${JSON.stringify(e)}`)
       }
+      await sleep(50)
     }
+
+    try {
+      await Promise.all(deletePromises)
+    } catch (err) {
+      console.log(err);
+    }
+
+    console.log('Done cleaning up conversations')
+
   }
 }
 

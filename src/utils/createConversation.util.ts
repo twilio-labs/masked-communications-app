@@ -3,9 +3,10 @@ import { SessionPostBody } from "../@types/types";
 import client from "../twilioClient";
 
 import retry from 'async-retry';
+import { retryConfig } from "../config/retry.config";
 
-export const createConversation = async (options: SessionPostBody) : Promise<ConversationInstance> => {
 
+export const createConversation = async (options: SessionPostBody, retryOptions = retryConfig) : Promise<ConversationInstance> => {
   return retry(async (quit) => {
     try {
       return client.conversations.conversations.create(options);
@@ -20,5 +21,5 @@ export const createConversation = async (options: SessionPostBody) : Promise<Con
       console.log('Re-trying on 429 error');
       throw new Error(err);
     }
-  })
+  }, retryOptions)
 }
