@@ -51,8 +51,9 @@ $ cp .env.example .env
 | CALL_ANNOUCEMENT_LANGUAGE       | The language to speak announcements in.                                       | "en" or any of the [supported languages](https://www.twilio.com/docs/voice/twiml/say#attributes-language).                    |
 | OUT_OF_SESSION_MESSAGE_FOR_CALL | A message to play if someone calls the number pool without an active session. | "Your session is no longer active. Goodbye."               |
 | CONNECTING_CALL_ANNOUCEMENT     | A message to play when a caller is being connected to the other party.        | "We're connecting you to your agent now."                  |
-| DOMAIN                          | The domain where the application will be hosted.                              | "mysite.com" or "https://your-domain.ngrok.io"             |
-
+| DOMAIN                          | The domain where the application will be hosted.                              | "mysite.com" or "your-domain.ngrok.io" (no https://)             |
+| AUTH_USERNAME                          | Basic auth username for request authorization                              | "mySecureUserName"           |
+| AUTH_PASSWORD                          | Basic auth password for request authorization                              | "mySecretPassword"           |
 
 Once you have your environment variables set, you can start the app with this command:
 
@@ -85,6 +86,10 @@ Two webhooks can be configured in the Twilio Console:
 - Paste your webhook (`https://[your-domain]/conversations-post-event`) into the Post-Event URL input box.
 - Click "save" at the bottom of the page.
 
+# Authentication & Webhook Validation
+The app requires basic auth on request to the `/sessions` endpoint. This prevents an unauthorized person from creating sessions. To use basic auth, make sure `DOMAIN` (e.g. mysite.com, no http://), `AUTH_USERNAME`, and `AUTH_PASSWORD` are all set in your .env file, and restart the app.
+
+Webhooks are automatically validated using the Twilio Webhook signature. This prevents an unauthorized request to start a phone call without your permission. For webhook validation to work, your app needs `DOMAIN` to be set along with `TWILIO_AUTH_TOKEN` in the .env file.
 
 # Usage
 You can create a new masked-number session between multiple users by making a post request to the `/sessions` endpoint:
