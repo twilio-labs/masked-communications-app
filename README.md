@@ -52,7 +52,8 @@ $ cp .env.example .env
 | OUT_OF_SESSION_MESSAGE_FOR_CALL | A message to play if someone calls the number pool without an active session. | "Your session is no longer active. Goodbye."               |
 | CONNECTING_CALL_ANNOUCEMENT     | A message to play when a caller is being connected to the other party.        | "We're connecting you to your agent now."                  |
 | DOMAIN                          | The domain where the application will be hosted.                              | "mysite.com" or "your-domain.ngrok.io" (no https://)             |
-
+| AUTH_USERNAME                          | Basic auth username for request authorization                              | "mySecureUserName"           |
+| AUTH_PASSWORD                          | Basic auth password for request authorization                              | "mySecretPassword"           |
 
 Once you have your environment variables set, you can start the app with this command:
 
