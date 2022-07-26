@@ -1,10 +1,9 @@
-import { ParticipantInstance } from "twilio/lib/rest/api/v2010/account/conference/participant"
 import {
   addParticipantsToConversation,
   getActiveProxyAddresses,
   matchAvailableProxyAddresses } from "../../src/services/session.service"
 import { listParticipantConversations } from "../../src/utils"
-import * as retryModule from '../../src/utils/retryAddParticipant.util'
+import { retryAddParticipant } from '../../src/utils/retryAddParticipant.util'
 
 import { mockListParticipantsResponse } from "../support/testSupport"
 
@@ -12,7 +11,8 @@ import { mockListParticipantsResponse } from "../support/testSupport"
 jest.mock('../../src/utils/listParticipantConversations.util')
 const mockedListParticipantConversations = jest.mocked(listParticipantConversations, true)
 
-
+jest.mock('../../src/utils/retryAddParticipant.util')
+const mockedRetryAddParticipant = jest.mocked(retryAddParticipant, true)
 
 describe('session service', () => {
   describe('getActiveProxyAdresses', () => {
@@ -30,13 +30,28 @@ describe('session service', () => {
 
       expect(result).toEqual({"+1112223333": [], "+2223334444": []})
     })
+
+    it('throws error if listParticipantConversations throws', async () => {
+      const mockError = new Error()
+      mockedListParticipantConversations.mockResolvedValue(mockError as any)
+
+      await expect(getActiveProxyAddresses(['+1112223333', '+2223334444'])).rejects.toThrow()
+    })
   })
 
   describe('matchAvailableProxyAddresses', () => {
-    it('selects numbers that are not active proxy addresses', async () => {
-      const env = process.env
-      jest.resetModules()
+    const env = process.env
 
+    beforeEach(() => {
+      jest.resetModules()
+      process.env = { ...env }
+    })
+
+    afterEach(() => {
+        process.env = env
+    })
+
+    it('selects numbers that are not active proxy addresses', async () => {
       process.env.NUMBER_POOL = '["+3334445555", "+4445556666", "+5556667777", "+6667778888"]' as any
       
       const activeProxyAddresses = {"+1112223333": ["+3334445555", "+4445556666"], "+2223334444": ["+3334445555", "+4445556666"]}
@@ -46,23 +61,36 @@ describe('session service', () => {
 
       process.env = env
     })
+
+    it('throws Not enough numbers error if <1 number in pool', async () => {
+      process.env.NUMBER_POOL = '["+3334445555", "+4445556666"]' as any
+      const activeProxyAddresses = {"+1112223333": ["+3334445555", "+4445556666"]}
+
+      await expect(matchAvailableProxyAddresses(activeProxyAddresses)).rejects.toThrowError('Not enough numbers available in pool for +1112223333')
+
+    })
+
   })
 
-  // describe('retryParticipantAdd', () => {
-
-  //   retryParticipantAdd('CHXXXXX', '+1112223333', ["+5556667777", "+6667778888"])
-
-
-  // })
-
   describe('addParticipantsToConversation', () => {
-    const mockedRetryParticipantAdd = jest.spyOn(retryModule, 'retryAddParticipant')
-    const proxyBindings = {"+1112223333": ["+5556667777", "+6667778888"], "+2223334444": ["+5556667777", "+6667778888"]}
-
+    
     it('calls retryParticipantAdd with conversation sid and participant addresses', async () => {
+      mockedRetryAddParticipant.mockResolvedValue({} as any)
+      const proxyBindings = {"+1112223333": ["+5556667777", "+6667778888"], "+2223334444": ["+5556667777", "+6667778888"]}
+      
       addParticipantsToConversation('CHXXXXX', proxyBindings)
 
-      expect(mockedRetryParticipantAdd).toBeCalledTimes(2)
+      expect(mockedRetryAddParticipant).toBeCalledWith('CHXXXXX','+1112223333', ["+5556667777", "+6667778888"])
+      expect(mockedRetryAddParticipant).toBeCalledWith('CHXXXXX','+2223334444', ["+5556667777", "+6667778888"])
+      expect(mockedRetryAddParticipant).toBeCalledTimes(2)
+    })
+
+    it('throws error if retryAddParticipant throws', async () => {
+      const mockError = new Error()
+      mockedRetryAddParticipant.mockRejectedValue(mockError as any)
+      const proxyBindings = {"+1112223333": ["+5556667777", "+6667778888"], "+2223334444": ["+5556667777", "+6667778888"]}
+      
+      await expect(addParticipantsToConversation('CHXXXXX', proxyBindings)).rejects.toThrow()
     })
   })
 })

@@ -52,16 +52,10 @@ export const matchAvailableProxyAddresses = async (activeProxyAddresses: ActiveP
 
 export const addParticipantsToConversation = async (conversationSid: string, proxyBindings: ProxyBindings) => {
   const promises = []
-
+  
   for (const [participantAddress, proxyAddresses] of Object.entries(proxyBindings)) {
-
-    try {
-      const participantAttempt = retryAddParticipant(conversationSid, participantAddress, proxyAddresses)
-      promises.push(participantAttempt)
-    } catch (err) {
-      console.log(err)
-      throw new Error(err)
-    }
+    const participantAttempt = retryAddParticipant(conversationSid, participantAddress, proxyAddresses)
+    promises.push(participantAttempt)
   }
 
   try {
