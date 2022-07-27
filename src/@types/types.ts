@@ -37,3 +37,10 @@ export interface JoinConferenceParams extends Request {
     conferenceName: string
   }
 }
+
+export interface ParticipantsToDial[] {
+  messagingBinding: {
+    address: string
+    proxyAddress: string
+  }
+}
