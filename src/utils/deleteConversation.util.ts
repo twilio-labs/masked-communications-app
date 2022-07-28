@@ -6,6 +6,7 @@ import { retryConfig } from "../config/retry.config";
 export const deleteConversation = async (conversationSid: string, retryOptions = retryConfig) : Promise<boolean> => {
   return retry(async(quit) => {
     try {
+      console.log(client['conversations']['conversations']['remove'])
       await client.conversations.conversations(conversationSid).remove()
       return true
     } catch (err) {
