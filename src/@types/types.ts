@@ -38,9 +38,7 @@ export interface JoinConferenceParams extends Request {
   }
 }
 
-export interface ParticipantsToDial[] {
-  messagingBinding: {
-    address: string
-    proxyAddress: string
-  }
+export interface ParticipantToDial {
+  address: string,
+  proxyAddress: string
 }

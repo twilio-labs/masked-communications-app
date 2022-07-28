@@ -5,6 +5,7 @@ import { getConversationByAddressPair } from "../utils/getConversationByAddressP
 import client from '../twilioClient'
 import { participantsToDial } from "../utils/participantsToDial.util";
 import { listConversationParticipants } from "../utils";
+import { generateConferenceName } from "../utils/generateConferenceName.util";
 
 export const generateTwiml = async (from: string, to: string) => {
   let response = new VoiceResponse();
@@ -27,7 +28,7 @@ export const generateTwiml = async (from: string, to: string) => {
     }, process.env.CONNECTING_CALL_ANNOUCEMENT);
 
     if (dialList.length > 1) {
-      const conferenceName = `${from}_at_${Date.now()}`
+      const conferenceName = generateConferenceName(from)
 
       const callPromises = dialList.map(pa => {
           console.log(`Dialing ${pa.address} from ${pa.proxyAddress}...`);
@@ -39,12 +40,7 @@ export const generateTwiml = async (from: string, to: string) => {
           });
       });
 
-      try {
-        await Promise.all(callPromises)
-      } catch(err) {
-        console.log(err)
-        throw new Error(err)
-      }
+      await Promise.all(callPromises)
 
       const dial = response.dial();
       dial.conference({

@@ -1,9 +1,9 @@
 import { ParticipantInstance } from "twilio/lib/rest/conversations/v1/conversation/participant";
+import { ParticipantToDial } from "../@types/types";
 
-export const participantsToDial = (participants: Array<ParticipantInstance>, from: string) : ParticipantsToDial => {
+export const participantsToDial = (participants: Array<ParticipantInstance>, from: string) : ParticipantToDial[] => {
   
-  let accumulator: {address: string, proxyAddress: string }[]
-  return participants.reduce((result, p) => {
+  const output = participants.reduce((result, p) => {
     if (p.messagingBinding.type === "sms" && p.messagingBinding.address != from) {
         console.log(`Adding ${p.messagingBinding.address} to list of numbers to dial.\n`)
   
@@ -14,5 +14,7 @@ export const participantsToDial = (participants: Array<ParticipantInstance>, fro
     }
   
     return result;
-  }, accumulator)
+  }, [])
+
+  return output;
 }
