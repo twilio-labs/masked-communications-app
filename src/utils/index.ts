@@ -2,3 +2,8 @@ export * from "./addParticipant.util";
 export * from "./createConversation.util";
 export * from "./deleteConversation.util";
 export * from "./listParticipantConversations.util"
+export * from "./retryAddParticipant.util"
+export * from "./listConversationParticipants.util"
+export * from "./participantsToDial.util"
+export * from "./getConversationByAddressPair.util"
+export * from "./generateConferenceName.util"

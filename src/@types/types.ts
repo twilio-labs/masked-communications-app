@@ -37,3 +37,8 @@ export interface JoinConferenceParams extends Request {
     conferenceName: string
   }
 }
+
+export interface ParticipantToDial {
+  address: string,
+  proxyAddress: string
+}
