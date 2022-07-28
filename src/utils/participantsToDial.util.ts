@@ -5,12 +5,12 @@ export const participantsToDial = (participants: Array<ParticipantInstance>, fro
   
   const output = participants.reduce((result, p) => {
     if (p.messagingBinding.type === "sms" && p.messagingBinding.address != from) {
-        console.log(`Adding ${p.messagingBinding.address} to list of numbers to dial.\n`)
-  
-        result.push({
-            address: p.messagingBinding.address,
-            proxyAddress: p.messagingBinding.proxy_address
-        })
+      console.log(`Adding ${p.messagingBinding.address} to list of numbers to dial.\n`)
+
+      result.push({
+          address: p.messagingBinding.address,
+          proxyAddress: p.messagingBinding.proxy_address
+      })
     }
   
     return result;
