@@ -1,11 +1,12 @@
+import client from '../twilioClient'
 import VoiceResponse from "twilio/lib/twiml/VoiceResponse";
 
-import { getConversationByAddressPair } from "../utils/getConversationByAddressPair.util";
-
-import client from '../twilioClient'
-import { participantsToDial } from "../utils/participantsToDial.util";
-import { listConversationParticipants } from "../utils";
-import { generateConferenceName } from "../utils/generateConferenceName.util";
+import {
+  getConversationByAddressPair,
+  participantsToDial,
+  listConversationParticipants,
+  generateConferenceName
+} from "../utils/";
 
 export const generateTwiml = async (from: string, to: string) => {
   let response = new VoiceResponse();
@@ -46,8 +47,6 @@ export const generateTwiml = async (from: string, to: string) => {
       dial.conference({
           endConferenceOnExit: true
       }, conferenceName);
-
-
     } else {
       const callee = dialList[0]
       const dial = response.dial({
@@ -56,7 +55,6 @@ export const generateTwiml = async (from: string, to: string) => {
 
       dial.number(callee.address);
     }
-
   }
 
   return response;
