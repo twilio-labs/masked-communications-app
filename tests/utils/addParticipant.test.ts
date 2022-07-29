@@ -18,9 +18,10 @@ describe('addParticipant util', () => {
 
    
   it('it adds participant to conversation', async () => {
+    let createSpy = jest.fn((options) => { return mockParticipant })
 
-    let createSpy = jest.fn((options) => { return options });
-    let participantsSpy = jest.fn(() => { return  {create:createSpy}});
+    let participantsSpy = { participants: { create: createSpy } } ;
+    
     const conversationsSpy = jest.fn((options) => { return participantsSpy });
 
     mockedClient['conversations'] = {
@@ -30,10 +31,8 @@ describe('addParticipant util', () => {
 
     const result = await addParticipant("myConversationSid", mockParticipant );
     expect(conversationsSpy).toBeCalledWith("myConversationSid");
-    expect(participantsSpy).toBeCalled();
     expect(createSpy).toBeCalledWith(mockParticipant);
     expect(result).not.toBeNull();
-
   })
 
 
