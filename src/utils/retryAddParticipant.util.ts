@@ -1,29 +1,26 @@
 import { addParticipant } from "./addParticipant.util"
 
-export const retryAddParticipant = async (conversationSid: string, participantAddress: string, proxyAddresses: Array<string>) => {
+export async function retryAddParticipant(conversationSid: string, participantAddress: string, proxyAddresses: Array<string>) {
+  if(proxyAddresses.length < 1) {
+    throw new Error(`No available proxy addresses for ${participantAddress}`)
+  }
+  
   try {
-    while(proxyAddresses.length > 0) {
-      try {
-        const participant = {
-          'messagingBinding.address': participantAddress,
-          'messagingBinding.proxyAddress': proxyAddresses[0]
-        } as any
-  
-        return addParticipant(conversationSid, participant)
-  
-      } catch(err) {
-        if (err.code === 50416) {
-          const remainingProxyAddresses = proxyAddresses.shift()
-          retryAddParticipant(conversationSid, participantAddress, remainingProxyAddresses as any)
-        }
-        console.log(err)
-        throw new Error(err)
-      }
-    }
+    const participant = {
+      'messagingBinding.address': participantAddress,
+      'messagingBinding.proxyAddress': proxyAddresses[0]
+    } as any
 
-    throw new Error(`No proxy addresses available for ${participantAddress}`)
+    const result = await addParticipant(conversationSid, participant)
+    return result
   } catch(err) {
-    console.log(err)
-    throw new Error(err)
+    if (err.code === 50416) {
+      proxyAddresses.shift()
+      return retryAddParticipant(conversationSid, participantAddress, proxyAddresses)
+    } else {
+      console.log('hereherh')
+      console.log(err)
+      throw new Error(err)
+    }
   }
 }
