@@ -18,7 +18,6 @@ export async function retryAddParticipant(conversationSid: string, participantAd
       proxyAddresses.shift()
       return retryAddParticipant(conversationSid, participantAddress, proxyAddresses)
     } else {
-      console.log('hereherh')
       console.log(err)
       throw new Error(err)
     }
