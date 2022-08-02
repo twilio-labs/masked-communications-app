@@ -54,7 +54,8 @@ describe('sessions controller', () => {
 
     const res = await request(app)
       .post('/sessions')
-      .set('content-type', 'application/json')
+      .set('Content-Type', 'application/json')
+      .set('Authorization', process.env.AUTH_HEADER)
       .send({
         addresses: requestedPhoneNumbers,
       })
@@ -79,6 +80,7 @@ describe('sessions controller', () => {
     const res = await request(app)
       .post('/sessions')
       .set('content-type', 'application/json')
+      .set('Authorization', process.env.AUTH_HEADER)
       .send({
         addresses: requestedPhoneNumbers,
       })
