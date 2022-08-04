@@ -22,7 +22,7 @@ export const post = async (
     try {
       await addParticipantsToConversation(conversation.sid, proxyAddresses)
       res.setHeader('content-type', 'application/json');
-      return res.status(200).send(`${JSON.stringify(conversation)}`);
+      return res.status(200).send({'conversationSid': conversation.sid});
     } catch(err) {
       await deleteConversation(conversation.sid);
       return res.status(500).send(`${conversation.sid} failed to create session: ${err}`)
