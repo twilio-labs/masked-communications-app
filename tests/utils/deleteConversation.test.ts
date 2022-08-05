@@ -55,8 +55,10 @@ describe('deleteConversation util', () => {
     try {
       await deleteConversation("myConversationSid");
     } catch (e) {
-      expect(consoleSpy).toHaveBeenCalledWith('Quit without retry');
+      console.log(e)
     }
+
+    expect(consoleSpy).toHaveBeenCalledWith('Quit without retry');
   })
 
   it('retrys if error is 429', async () => {
@@ -93,7 +95,9 @@ describe('deleteConversation util', () => {
     try {
       await deleteConversation("myConversationSid",  { retries: 0, factor: 1, maxTimeout: 0, minTimeout: 0 });
     } catch (e) {
-      expect(consoleSpy).toHaveBeenCalledWith('Re-trying on 429 error');
+      console.log(e)
     }
+    
+    expect(consoleSpy).toHaveBeenCalledWith('Re-trying on 429 error');
   })
 })

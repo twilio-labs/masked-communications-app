@@ -34,7 +34,6 @@ describe('retryParticipantAdd', () => {
     mockAddParticipant
       .mockRejectedValueOnce(rejectedValue)
       .mockResolvedValueOnce(mockParticpantInstance as any)
-      // .mockResolvedValueOnce(mockParticpantInstance as any)
 
     const result = await retry.retryAddParticipant('CH1234', '+111', ['+222', '+333'])
     expect(retrySpy).toBeCalledTimes(1)

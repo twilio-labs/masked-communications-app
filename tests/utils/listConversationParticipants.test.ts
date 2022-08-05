@@ -44,7 +44,7 @@ describe('listConversationParticipants', () => {
 
     await expect(listConversationParticipants("CH123"))
       .rejects
-      .toThrowError('Participant List Erro')
+      .toThrowError('Participant List Error')
   })
 
   it('should retry if Twilio client throws a 429 error', async () => {
@@ -78,8 +78,10 @@ describe('listConversationParticipants', () => {
 
     try {
       await listConversationParticipants("CH123", { retries: 0, factor: 1, maxTimeout: 0, minTimeout: 0 })
-    } catch(err) {
-      expect(consoleSpy).toBeCalledWith('Re-trying on 429 error')
+    } catch(e) {
+      console.log(e)
     }
+
+    expect(consoleSpy).toBeCalledWith('Re-trying on 429 error')
   })
 })

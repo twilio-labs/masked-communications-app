@@ -1,6 +1,5 @@
 import { listParticipantConversations } from "../../src/utils";
 import client from '../../src/twilioClient';
-import { ParticipantConversationInstance } from 'twilio/lib/rest/conversations/v1/participantConversation'
 
 jest.mock('../../src/twilioClient')
 let mockedClient = jest.mocked(client, true)
@@ -39,8 +38,10 @@ describe('ListParticipantConversations util', () => {
     try {
       await listParticipantConversations("+1234");
     } catch (e) {
-      expect(consoleSpy).toHaveBeenCalledWith('Quit without retry');
+      console.log(e)
     }
+
+    expect(consoleSpy).toHaveBeenCalledWith('Quit without retry');
   })
 
 
@@ -73,8 +74,10 @@ describe('ListParticipantConversations util', () => {
         "+1234",
         { retries: 0, factor: 1, maxTimeout: 0, minTimeout: 0 });
     } catch (e) {
-      expect(consoleSpy).toHaveBeenCalledWith('Re-trying on 429 error');
+      console.log(e)
     }
+
+    expect(consoleSpy).toHaveBeenCalledWith('Re-trying on 429 error');
   })
 
 })

@@ -37,8 +37,10 @@ describe('createConversation util', () => {
     try {
       await createConversation({ friendlyName: "my conversation", addresses: ['1', '2'] });
     } catch (e) {
-      expect(consoleSpy).toHaveBeenCalledWith('Quit without retry');
+      console.log(e)
     }
+    
+    expect(consoleSpy).toHaveBeenCalledWith('Quit without retry');
   })
 
   it('throws error to retry on 429 status code', async () => {
@@ -70,7 +72,9 @@ describe('createConversation util', () => {
         { friendlyName: "my conversation", addresses: ['1', '2']},
         { retries: 0, factor: 1, maxTimeout: 0, minTimeout: 0 });
     } catch (e) {
-      expect(consoleSpy).toHaveBeenCalledWith('Re-trying on 429 error');
+      console.log(e)
     }
+
+    expect(consoleSpy).toHaveBeenCalledWith('Re-trying on 429 error');
   })
 })

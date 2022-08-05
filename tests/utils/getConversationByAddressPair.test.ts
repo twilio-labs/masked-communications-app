@@ -57,7 +57,7 @@ describe('GetConversationByAddressPair util', () => {
 
     await expect(getConversationByAddressPair("bad input", "worse input"))
       .rejects
-      .toThrowError('Twilio Proble')
+      .toThrowError('Error: Twilio Problem')
   })
 
   it("should retry if Twilio error is 429", async () => {
@@ -89,8 +89,10 @@ describe('GetConversationByAddressPair util', () => {
       try {
         await getConversationByAddressPair("+1234", "+5678", { retries: 0, factor: 1, maxTimeout: 0, minTimeout: 0 });
       } catch (e) {
-        expect(consoleSpy).toHaveBeenCalledWith('Re-trying on 429 error');
+        console.log(e)
       }
+
+      expect(consoleSpy).toHaveBeenCalledWith('Re-trying on 429 error');
   })
 })
 

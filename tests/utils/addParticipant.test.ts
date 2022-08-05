@@ -1,7 +1,7 @@
 import { addParticipant } from "../../src/utils";
 import client from '../../src/twilioClient';
 
-import { ParticipantInstance, ParticipantListInstanceCreateOptions } from "twilio/lib/rest/conversations/v1/conversation/participant";
+import { ParticipantListInstanceCreateOptions } from "twilio/lib/rest/conversations/v1/conversation/participant";
 
 
 jest.mock('../../src/twilioClient')
@@ -53,8 +53,9 @@ describe('addParticipant util', () => {
     try {
       await addParticipant("myConversationSid", mockParticipant );
     } catch (e) {
-      expect(consoleSpy).toHaveBeenCalledWith('Quit without retry');
+      console.log(e)
     }
+    expect(consoleSpy).toHaveBeenCalledWith('Quit without retry');
   })
 
   it('throws error to retry on 429 status code', async () => {
@@ -87,7 +88,9 @@ describe('addParticipant util', () => {
     try {
       await addParticipant("myConversationSid", mockParticipant, { retries: 0, factor: 1, maxTimeout: 0, minTimeout: 0 });
     } catch (e) {
-      expect(consoleSpy).toHaveBeenCalledWith('Re-trying on 429 error');
+      console.log(e);
     }
+
+    expect(consoleSpy).toHaveBeenCalledWith('Re-trying on 429 error');
   })
 })
