@@ -1,8 +1,9 @@
 import retry from 'async-retry'
 import { ParticipantInstance } from 'twilio/lib/rest/conversations/v1/conversation/participant'
 import client from '../twilioClient'
+import { retryConfig } from '../config/retry.config'
 
-export const listConversationParticipants = async (conversation: string) : Promise<ParticipantInstance[]> => {
+export const listConversationParticipants = async (conversation: string, retryOptions = retryConfig) : Promise<ParticipantInstance[]> => {
   return retry(async (quit) => {
     try {
       const participants = await client.conversations
@@ -20,6 +21,6 @@ export const listConversationParticipants = async (conversation: string) : Promi
       console.log('Re-trying on 429 error');
       throw new Error(err);
     }
-  })
+  }, retryOptions)
 
 }

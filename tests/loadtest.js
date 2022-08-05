@@ -16,10 +16,16 @@ async function makeRequest(contacts) {
   
   return new Promise((resolve, reject) => {
 
+    const stringBuffer = new Buffer.from(`${process.env.AUTH_USERNAME}:${process.env.AUTH_PASSWORD}`, "utf-8")
+    const basicAuthToken = stringBuffer.toString('base64')
+
     fetch(`http://localhost:${port}/sessions`, {
       method: 'post',
       body: JSON.stringify(body),
-      headers: {'Content-Type': 'application/json'}
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${basicAuthToken}`
+      }
     })
     .then(res => {
       const data = res.json()
@@ -39,13 +45,13 @@ async function runTest() {
   let results = [];
   try {
     const requests = [];
-    for (let i = 0; i < 300; ++i) {
+    for (let i = 0; i < 1000; ++i) {
       const contacts = ['+1925215'+ ('0000'+i).slice(-4), '+1925635'+ ('0000'+i).slice(-4)];
       console.log(contacts)
       
       const promise = makeRequest(contacts)
       requests.push(promise);
-      await sleep(2)
+      await sleep(100)
     }
     
     results = await Promise.allSettled(requests);
