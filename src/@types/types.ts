@@ -1,10 +1,10 @@
-import type { Request } from "express";
-import { ConversationListInstanceCreateOptions } from "twilio/lib/rest/conversations/v1/conversation";
+import type { Request } from 'express'
+import { ConversationListInstanceCreateOptions } from 'twilio/lib/rest/conversations/v1/conversation'
 
 export interface SessionPostBody extends ConversationListInstanceCreateOptions {
   addresses: Array<string>;
 }
-  
+
 export interface ConversationsPostEventBody {
   AccountSid: string;
   Attributes: string;

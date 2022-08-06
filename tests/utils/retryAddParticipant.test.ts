@@ -4,7 +4,6 @@ import * as retry from '../../src/utils/retryAddParticipant.util'
 
 jest.mock('../../src/utils/addParticipant.util')
 
-
 describe('retryParticipantAdd', () => {
   it('throws if no proxy addresses are left', async () => {
     await expect(retry.retryAddParticipant('CH1234', '+111', []))
@@ -15,14 +14,12 @@ describe('retryParticipantAdd', () => {
   it('calls itself again when 50416 is thrown to try another address', async () => {
     const mockAddParticipant = jest.mocked(addParticipant, true)
 
-    interface TwilioError extends Error {
-      code: number
-    }
-
     class TwilioError extends Error {
-      constructor(message) {
-        super(message);
-        this.name = "ConcurrencyLimit";
+      code: number
+
+      constructor (message) {
+        super(message)
+        this.name = 'ConcurrencyLimit'
         this.code = 50416
       }
     }
@@ -56,7 +53,6 @@ describe('retryParticipantAdd', () => {
     mockAddParticipant
       .mockRejectedValue(rejectedValue)
 
-    debugger
     await expect(retry.retryAddParticipant('CH1234', '+111', ['+222', '+333']))
       .rejects
       .toThrow('Twilio Problem')

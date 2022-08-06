@@ -20,6 +20,13 @@
     "@types/morgan": "^1.9.3",
     "@types/node": "^18.0.1",
     "@types/supertest": "^2.0.12",
+    "@typescript-eslint/eslint-plugin": "^5.32.0",
+    "@typescript-eslint/parser": "^5.32.0",
+    "eslint": "^8.21.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.2.4",
+    "eslint-plugin-promise": "^6.0.0",
     "jest": "^28.1.3",
     "node-fetch": "2",
     "nodemon": "^2.0.19",
@@ -28,11 +35,14 @@
     "ts-node": "^10.8.2",
     "typescript": "^4.7.4"
   },
-  "name": "masked-communications",
+  "name": "masked-comms-app",
   "scripts": {
     "dev": "nodemon -r dotenv/config index.ts",
     "loadtest": "node ./tests/loadtest.js",
     "test": "jest"
   },
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:aymenn/masked-comms-app.git",
+  "license": "MIT"
 }

@@ -1,4 +1,4 @@
-import { participantsToDial } from "../../src/utils"
+import { participantsToDial } from '../../src/utils'
 
 describe('participantsToDial', () => {
   it('only dials SMS type bindings that are not the person calling', async () => {
@@ -22,9 +22,9 @@ describe('participantsToDial', () => {
         }
       }
     ] as any
-    
+
     const result = participantsToDial(participants, '+1111111111')
 
-    expect(result).toEqual([{"address": "+2222222222", "proxyAddress": "+0000000000"}])
+    expect(result).toEqual([{ address: '+2222222222', proxyAddress: '+0000000000' }])
   })
 })

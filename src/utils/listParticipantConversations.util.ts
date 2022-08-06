@@ -20,5 +20,4 @@ export const listParticipantConversations = async (phoneNumber: string, retryOpt
       throw new Error(err);
     }
   }, retryOptions)
-
 }

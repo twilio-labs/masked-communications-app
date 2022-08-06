@@ -14,13 +14,12 @@ export const listConversationParticipants = async (conversation: string, retryOp
       return participants
     } catch (err) {
       if (err.status !== 429) {
-        quit(new Error(err));
-        return;
+        quit(new Error(err))
+        return
       }
 
-      console.log('Re-trying on 429 error');
-      throw new Error(err);
+      console.log('Re-trying on 429 error')
+      throw new Error(err)
     }
   }, retryOptions)
-
 }
