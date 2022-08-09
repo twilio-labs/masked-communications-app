@@ -1,4 +1,3 @@
-
 # Masked Communications App
 [![Tests](https://github.com/aymenn/masked-comms-app/actions/workflows/test.yml/badge.svg)](https://github.com/aymenn/masked-comms-app/actions/workflows/test.yml)
 
