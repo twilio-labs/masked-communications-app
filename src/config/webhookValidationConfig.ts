@@ -3,7 +3,7 @@ function shouldValidate () {
 }
 
 export const webhookConfig = {
-    protocol: 'https',
-    host: process.env.DOMAIN,
-    validate: shouldValidate()
+  protocol: 'https',
+  host: process.env.DOMAIN,
+  validate: shouldValidate()
 }

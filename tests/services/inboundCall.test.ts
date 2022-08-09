@@ -1,14 +1,14 @@
 
 import client from '../../src/twilioClient'
 import { generateTwiml } from '../../src/services/inboundCall.service'
-import { getConversationByAddressPair } from "../../src/utils/getConversationByAddressPair.util";
-import { listConversationParticipants } from '../../src/utils/listConversationParticipants.util';
+import { getConversationByAddressPair } from '../../src/utils/getConversationByAddressPair.util'
+import { listConversationParticipants } from '../../src/utils/listConversationParticipants.util'
 import { participantsToDial } from '../../src/utils/participantsToDial.util'
 import { generateConferenceName } from '../../src/utils/generateConferenceName.util'
 
 jest.mock('../../src/twilioClient')
-jest.mock("../../src/utils/getConversationByAddressPair.util")
-jest.mock("../../src/utils/listConversationParticipants.util")
+jest.mock('../../src/utils/getConversationByAddressPair.util')
+jest.mock('../../src/utils/listConversationParticipants.util')
 jest.mock('../../src/utils/participantsToDial.util')
 jest.mock('../../src/utils/generateConferenceName.util')
 
@@ -36,24 +36,24 @@ describe('inbound call service', () => {
     process.env.OUT_OF_SESSION_MESSAGE_FOR_CALL = 'You session has ended, please call our main line.'
     const result = await generateTwiml('+1112223333', '+2223334444')
 
-    expect(result.toString()).toBe("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><Say voice=\"alice\" language=\"en\">You session has ended, please call our main line.</Say></Response>")
+    expect(result.toString()).toBe('<?xml version="1.0" encoding="UTF-8"?><Response><Say voice="alice" language="en">You session has ended, please call our main line.</Say></Response>')
   })
-  
+
   it('creates a conference and dials participants if dialList is longer than 1', async () => {
     process.env.DOMAIN = 'testdomain.com'
     process.env.CALL_ANNOUNCMENT_VOICE = 'alice'
     process.env.CALL_ANNOUCEMENT_LANGUAGE = 'en'
     process.env.CONNECTING_CALL_ANNOUCEMENT = 'Connecting you to your agent now.'
-    
-    let mockedClient = jest.mocked(client, true)
-    const createSpy = jest.fn((callObject) => { return })
+
+    const mockedClient = jest.mocked(client, true)
+    const createSpy = jest.fn((callObject) => { })
     const mockedConferenceName = jest.mocked(generateConferenceName, true)
 
-    mockedClient['calls'] = {
-        create: (options) => createSpy(options)
+    mockedClient.calls = {
+      create: (options) => createSpy(options)
     } as any
-    
-    mockGetConversationAddressPair.mockResolvedValue({ conversationSid: 'CH123'} as any)
+
+    mockGetConversationAddressPair.mockResolvedValue({ conversationSid: 'CH123' } as any)
     mockListConversationParticipants.mockResolvedValue([{
       messagingBinding: {
         address: '+1112223333',
@@ -74,7 +74,7 @@ describe('inbound call service', () => {
 
     const result = await generateTwiml('+1112223333', '+2223334444')
 
-    expect(result.toString()).toBe("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><Say language=\"en\">Connecting you to your agent now.</Say><Dial><Conference endConferenceOnExit=\"true\">test_conference</Conference></Dial></Response>")
+    expect(result.toString()).toBe('<?xml version="1.0" encoding="UTF-8"?><Response><Say language="en">Connecting you to your agent now.</Say><Dial><Conference endConferenceOnExit="true">test_conference</Conference></Dial></Response>')
 
     expect(createSpy).toHaveBeenNthCalledWith(1,
       expect.objectContaining({
@@ -98,16 +98,14 @@ describe('inbound call service', () => {
     process.env.CALL_ANNOUNCMENT_VOICE = 'alice'
     process.env.CALL_ANNOUCEMENT_LANGUAGE = 'en'
     process.env.CONNECTING_CALL_ANNOUCEMENT = 'Connecting you to your agent now.'
-    
-    let mockedClient = jest.mocked(client, true)
-    const createSpy = jest.fn((callObject) => { return })
-    const mockedConferenceName = jest.mocked(generateConferenceName, true)
 
-    mockedClient['calls'] = {
-        create: jest.fn(() => { throw new Error('Call fail') })
+    const mockedClient = jest.mocked(client, true)
+
+    mockedClient.calls = {
+      create: jest.fn(() => { throw new Error('Call fail') })
     } as any
-    
-    mockGetConversationAddressPair.mockResolvedValue({ conversationSid: 'CH123'} as any)
+
+    mockGetConversationAddressPair.mockResolvedValue({ conversationSid: 'CH123' } as any)
     mockListConversationParticipants.mockResolvedValue([{
       messagingBinding: {
         address: '+1112223333',
@@ -135,7 +133,7 @@ describe('inbound call service', () => {
     process.env.CALL_ANNOUCEMENT_LANGUAGE = 'en'
     process.env.CONNECTING_CALL_ANNOUCEMENT = 'Connecting you to your agent now.'
 
-    mockGetConversationAddressPair.mockResolvedValue({ conversationSid: 'CH123'} as any)
+    mockGetConversationAddressPair.mockResolvedValue({ conversationSid: 'CH123' } as any)
     mockListConversationParticipants.mockResolvedValue([{
       messagingBinding: {
         address: '+1112223333',
@@ -152,6 +150,6 @@ describe('inbound call service', () => {
 
     const result = await generateTwiml('+1112223333', '+2223334444')
 
-    expect(result.toString()).toBe("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><Say language=\"en\">Connecting you to your agent now.</Say><Dial callerId=\"+2223334444\"><Number>+1112223333</Number></Dial></Response>")
+    expect(result.toString()).toBe('<?xml version="1.0" encoding="UTF-8"?><Response><Say language="en">Connecting you to your agent now.</Say><Dial callerId="+2223334444"><Number>+1112223333</Number></Dial></Response>')
   })
 })
