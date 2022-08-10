@@ -1,5 +1,5 @@
 # Masked Communications App
-[![Tests](https://github.com/aymenn/masked-comms-app/actions/workflows/test.yml/badge.svg)](https://github.com/aymenn/masked-comms-app/actions/workflows/test.yml)
+[![Tests](https://github.com/twilio-labs/masked-communications-app/actions/workflows/test.yml/badge.svg)](https://github.com/twilio-labs/masked-communications-app/workflows/test.yml)
 
 This is an open-source version of [Twilio Proxy](https://www.twilio.com/docs/proxy), built on top of the [Twilio Conversations API](https://www.twilio.com/docs/conversations). It adds the following features to conversations:
 
