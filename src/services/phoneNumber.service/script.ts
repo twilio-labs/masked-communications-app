@@ -58,8 +58,7 @@ async function preparePhoneNumberPool() {
 
   const phoneNumberPoolMap: PhoneNumberMap = {
     ca: {},
-    us: {},
-    _length: phoneNumberList.length
+    us: {}
   }
 
   for (const phoneNumber of phoneNumberList) {
