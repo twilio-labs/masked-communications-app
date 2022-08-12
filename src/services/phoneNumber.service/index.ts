@@ -10,16 +10,19 @@ export function getPhoneNumber(
     pageSize: 50
   }
 ) {
-  const optimalPhoneNumbers = []
+  const areaCodesByProximity: number[] | string[] =
+    areaCodeProximityMap[country][areaCode]
+  const countryPhoneMap = phoneNumberMap[country]
 
-  let curAreaCode = areaCodeProximityMap[country][areaCode].shift()
+  const optimalPhoneNumbers = []
+  let curAreaCode = areaCodesByProximity.shift()
   while (optimalPhoneNumbers.length < from + pageSize && !!curAreaCode) {
-    if (!phoneNumberMap[country][curAreaCode]?.length) {
-      curAreaCode = areaCodeProximityMap[country][areaCode].shift()
+    if (!countryPhoneMap[curAreaCode]?.length) {
+      curAreaCode = areaCodesByProximity.shift()
       continue
     }
 
-    optimalPhoneNumbers.push(phoneNumberMap[country][curAreaCode].shift())
+    optimalPhoneNumbers.push(countryPhoneMap[curAreaCode].shift())
   }
 
   return optimalPhoneNumbers.slice(from)
