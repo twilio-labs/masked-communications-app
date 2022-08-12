@@ -47,4 +47,5 @@ export interface ParticipantToDial {
 export interface PhoneNumberMap {
   ca: { [key: number | string]: string[] }
   us: { [key: number | string]: string[] }
+  _length: number // total number of phone numbers
 }

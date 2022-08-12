@@ -3,7 +3,7 @@ import * as fsp from 'fs/promises'
 import { getDistance } from 'geolib'
 import path from 'path'
 import areaCodeGeos from './area-code-geos.json'
-import type { PhoneNumberPool } from '../../@types/types'
+import type { PhoneNumberMap } from '../../@types/types'
 
 /****************************************************
  Computes the area-code-proxmity map which is used to
@@ -56,7 +56,11 @@ async function preparePhoneNumberPool() {
     await fsp.readFile(path.join(__dirname, 'phone-numbers.txt'), 'utf8')
   ).split('\n')
 
-  const phoneNumberPoolMap: PhoneNumberPool = { ca: {}, us: {} }
+  const phoneNumberPoolMap: PhoneNumberMap = {
+    ca: {},
+    us: {},
+    _length: phoneNumberList.length
+  }
 
   for (const phoneNumber of phoneNumberList) {
     const areaCode = parseInt(
