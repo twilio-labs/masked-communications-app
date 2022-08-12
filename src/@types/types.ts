@@ -44,7 +44,7 @@ export interface ParticipantToDial {
 }
 
 // TODO: Determine should phone numbers be stored as a string or an object?
-export interface PhoneNumberPool {
+export interface PhoneNumberMap {
   ca: { [key: number | string]: string[] }
   us: { [key: number | string]: string[] }
 }
