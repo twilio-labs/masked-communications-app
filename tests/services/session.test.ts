@@ -20,7 +20,7 @@ describe('session service', () => {
       mockedListParticipantConversations.mockResolvedValue(mockListParticipantsResponse as any)
       const result = await getActiveProxyAddresses(['+1112223333', '+2223334444'])
 
-      expect(result).toEqual({ '+1112223333': ['+3334445555', '+4445556666'], '+2223334444': ['+3334445555', '+4445556666'] })
+      expect(result).toEqual({ '+1112223333': ['+3334445555', '+3334449999', '+4445556666'], '+2223334444': ['+3334445555', '+3334449999', '+4445556666'] })
     })
 
     it('returns key with empty array if no active conversations', async () => {
