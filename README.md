@@ -29,10 +29,10 @@ Begin by cloning the repository, installing dependencies, and setting environmen
 
 ```bash
 # Clone the repository:
-$ git clone git@github.com:aymenn/masked-comms-app.git
+$ git clone git@github.com:twilio-labs/masked-communications-app.git
 
 # Make the repository your working directory:
-$ cd masked-comms-app
+$ cd masked-communications-app
 
 # Install dependencies:
 $ yarn install
