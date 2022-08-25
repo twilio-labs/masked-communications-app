@@ -55,7 +55,7 @@ export const mockListParticipantsResponse = [{
     name: null,
     level: null,
     type: 'sms',
-    proxy_address: '+3334445555',
+    proxy_address: '+4445555666',
     address: '+2223334444',
     projected_address: null
   },

@@ -57,7 +57,7 @@ describe('session service', () => {
       const result = await matchAvailableProxyAddresses(activeProxyAddresses)
 
       expect(result).toEqual({ '+1112223333': ['+5556667777', '+6667778888'], '+2223334444': ['+5556667777', '+6667778888'] })
-
+      expect(result).not.toContain('+4445555666')
       process.env = env
     })
 
