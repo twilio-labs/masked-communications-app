@@ -1,11 +1,11 @@
-/* eslint-disable space-before-function-paren */
+import { AreaCodeMatchPagingParams } from '../@types/types'
 import areaCodeProximityMap from '../data/area-code-proximity-map.json'
 import phoneNumberMap from '../data/phone-number-map.json'
 
 /**
- * @function getPhoneNumber
+ * @function getNearbyAreaCodeNumbers
  *
- * @description getPhoneNumber returns an array of phone numbers ordered by their proximity
+ * @description getNearbyAreaCodeNumbers returns an array of phone numbers ordered by their proximity
  * to the area code argument. The results are paged which allows you to call iterate through
  * your phone number pool efficiently.
  * @param areaCode - the area code you want to match
@@ -15,10 +15,10 @@ import phoneNumberMap from '../data/phone-number-map.json'
  * @returns array of phone numbers ordered by their proximity to the area code argument
  */
 
-export function getPhoneNumber(
+export function getNearbyAreaCodeNumbers (
   areaCode: number | string,
   country: keyof typeof phoneNumberMap,
-  { from = 0, pageSize = 50 }: { from?: number; pageSize?: number } = {
+  pagingParams: AreaCodeMatchPagingParams = {
     from: 0,
     pageSize: 50
   }
@@ -31,7 +31,7 @@ export function getPhoneNumber(
 
   const optimalPhoneNumbers = []
   let curAreaCode = areaCodesByProximity.shift()
-  while (optimalPhoneNumbers.length < from + pageSize && !!curAreaCode) {
+  while (optimalPhoneNumbers.length < pagingParams.from + pagingParams.pageSize && !!curAreaCode) {
     if (!countryPhoneMap[curAreaCode]?.length) {
       curAreaCode = areaCodesByProximity.shift()
       continue
@@ -40,5 +40,5 @@ export function getPhoneNumber(
     optimalPhoneNumbers.push(countryPhoneMap[curAreaCode].shift())
   }
 
-  return optimalPhoneNumbers.slice(from)
+  return optimalPhoneNumbers.slice(pagingParams.from)
 }
