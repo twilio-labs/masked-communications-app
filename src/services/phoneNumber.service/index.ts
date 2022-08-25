@@ -1,6 +1,6 @@
 /* eslint-disable space-before-function-paren */
-import areaCodeProximityMap from './area-code-proximity.json'
-import phoneNumberMap from './phone-number-map.json'
+import areaCodeProximityMap from '../../data/area-code-proximity-map.json'
+import phoneNumberMap from '../../data/phone-number-map.json'
 
 export function getPhoneNumber(
   areaCode: number | string,

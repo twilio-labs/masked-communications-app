@@ -21,7 +21,7 @@ interface AreaCodeItem {
 
 async function prepareAreaCodeProximities() {
   await fsp.writeFile(
-    path.resolve(__dirname, 'area-code-proximity.json'),
+    path.resolve(__dirname, '../../data/area-code-proximity-map.json'),
     JSON.stringify({
       ca: computeAreaCodeProximities(areaCodeGeos.ca),
       us: computeAreaCodeProximities(areaCodeGeos.us)
@@ -32,13 +32,18 @@ async function prepareAreaCodeProximities() {
 function computeAreaCodeProximities(areaCodeList: AreaCodeItem[]) {
   return areaCodeList
     .map((curAreaCodeItem) => ({
-      [curAreaCodeItem.areaCode]: areaCodeList
-        .map((areaCodeItem) => [
-          areaCodeItem.areaCode,
-          getDistance(curAreaCodeItem, areaCodeItem)
-        ])
-        .sort(([, aDistance], [, bDistance]) => aDistance - bDistance)
-        .map(([areaCode]) => areaCode)
+      [curAreaCodeItem.areaCode]: [curAreaCodeItem.areaCode].concat(
+        areaCodeList
+          .filter(
+            (areaCodeItem) => areaCodeItem.areaCode !== curAreaCodeItem.areaCode
+          )
+          .map((areaCodeItem) => [
+            areaCodeItem.areaCode,
+            getDistance(curAreaCodeItem, areaCodeItem)
+          ])
+          .sort(([, aDistance], [, bDistance]) => aDistance - bDistance)
+          .map(([areaCode]) => areaCode)
+      )
     }))
     .reduce((acc, cur) => Object.assign(acc, cur), {})
 }
