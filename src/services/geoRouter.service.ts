@@ -10,15 +10,15 @@ import areaCodeGeos from '../../scripts/areaCodeGeos'
  * to the area code argument. The results are paged which allows you to call iterate through
  * your phone number pool efficiently.
  * @param phoneNumber - the phone number containing area code you want to match
- * @param options.from - starting point to return
- * @param options.pageSize - how many phone numbers
+ * @param from - starting point to return
+ * @param pageSize - how many phone numbers
  * @returns array of phone numbers ordered by their proximity to the area code argument
  */
 
 export function getNearbyAreaCodeNumbers (
   phoneNumber: string,
-  from?: number,
-  pageSize?: number
+  from: number = 0,
+  pageSize: number = 50
 ) {
   // array of area codes ordered by their proximity to the areaCode argument
   const country = isCanadianNumber(phoneNumber) ? 'ca' : 'us'
@@ -60,8 +60,8 @@ export function isCanadianNumber (phoneNumber: string) : boolean {
 
 export function getNumberByCountry (
   countryCode: string,
-  from?: number,
-  pageSize?: number
+  from: number = 0,
+  pageSize: number = 50
 ) : string[] {
   return phoneNumberMap[countryCode].slice(from, from + pageSize)
 }

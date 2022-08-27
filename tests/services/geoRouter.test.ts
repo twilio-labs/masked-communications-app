@@ -1,6 +1,6 @@
-import { geoRouter, getNearbyAreaCodeNumbers, isCanadianNumber } from '../../src/services/areaCodeMatch.service'
+import { geoRouter, getNearbyAreaCodeNumbers, isCanadianNumber } from '../../src/services/geoRouter.service'
 
-const mockNumbers = {
+jest.mock('../../src/data/phoneNumberMap.json', () => ({
   44: [
     '+447911121111'
   ],
@@ -28,9 +28,7 @@ const mockNumbers = {
       '+14084444444'
     ]
   }
-}
-
-jest.mock('../../src/data/phoneNumberMap.json', () => (mockNumbers))
+}))
 
 describe('phone matcher service', () => {
   describe('area code match service', () => {
