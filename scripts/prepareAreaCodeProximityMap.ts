@@ -2,7 +2,7 @@
 import * as fsp from 'fs/promises'
 import { getDistance } from 'geolib'
 import path from 'path'
-import areaCodeGeos from './area-code-geos.json'
+import areaCodeGeos from './areaCodeGeos'
 
 /****************************************************
  Computes src/data/area-code-proxmity-map.json which is used to determine the
@@ -20,7 +20,7 @@ interface AreaCodeItem {
 
 async function prepareAreaCodeProximityMap() {
   await fsp.writeFile(
-    path.resolve(__dirname, '../src/data/area-code-proximity-map.json'),
+    path.resolve(__dirname, '../src/data/areaCodeProximityMap.json'),
     JSON.stringify({
       ca: computeAreaCodeProximities(areaCodeGeos.ca),
       us: computeAreaCodeProximities(areaCodeGeos.us)

@@ -48,8 +48,3 @@ export interface PhoneNumberMap {
   ca: { [key: number | string]: string[] }
   us: { [key: number | string]: string[] }
 }
-
-export interface AreaCodeMatchPagingParams {
-  from?: number;
-  pageSize?: number
-}
