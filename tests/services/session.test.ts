@@ -8,11 +8,16 @@ import { retryAddParticipant } from '../../src/utils/retryAddParticipant.util'
 
 import { mockListParticipantsResponse } from '../support/testSupport'
 
+import { geoRouter } from '../../src/services/geoRouter.service'
+
 jest.mock('../../src/utils/listParticipantConversations.util')
 const mockedListParticipantConversations = jest.mocked(listParticipantConversations, true)
 
 jest.mock('../../src/utils/retryAddParticipant.util')
 const mockedRetryAddParticipant = jest.mocked(retryAddParticipant, true)
+
+jest.mock('../../src/services/geoRouter.service')
+const mockedGeoRouter = jest.mocked(geoRouter, true)
 
 describe('session service', () => {
   describe('getActiveProxyAdresses', () => {
@@ -51,7 +56,7 @@ describe('session service', () => {
     })
 
     it('selects numbers that are not active proxy addresses', async () => {
-      process.env.NUMBER_POOL = '["+3334445555", "+4445556666", "+5556667777", "+6667778888"]' as any
+      mockedGeoRouter.mockReturnValue(['+3334445555', '+4445556666', '+5556667777', '+6667778888'])
 
       const activeProxyAddresses = { '+1112223333': ['+3334445555', '+4445556666'], '+2223334444': ['+3334445555', '+4445556666'] }
       const result = await matchAvailableProxyAddresses(activeProxyAddresses)
@@ -62,7 +67,7 @@ describe('session service', () => {
     })
 
     it('throws Not enough numbers error if <1 number in pool', async () => {
-      process.env.NUMBER_POOL = '["+3334445555", "+4445556666"]' as any
+      mockedGeoRouter.mockReturnValue(['+3334445555', '+4445556666'])
       const activeProxyAddresses = { '+1112223333': ['+3334445555', '+4445556666'] }
 
       await expect(matchAvailableProxyAddresses(activeProxyAddresses)).rejects.toThrowError('Not enough numbers available in pool for +1112223333')

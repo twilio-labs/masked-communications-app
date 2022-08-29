@@ -1,5 +1,6 @@
 import { ActiveProxyAddresses, ProxyBindings } from '../@types/types'
 import { listParticipantConversations, retryAddParticipant } from '../utils'
+import { geoRouter } from './geoRouter.service'
 
 export const getActiveProxyAddresses = async (phoneNumbers: Array<String>) : Promise<ActiveProxyAddresses> => {
   const activeConversations = {}
@@ -26,11 +27,12 @@ export const getActiveProxyAddresses = async (phoneNumbers: Array<String>) : Pro
 
 export const matchAvailableProxyAddresses = async (activeProxyAddresses: ActiveProxyAddresses) : Promise<ProxyBindings> => {
   try {
-    const phoneNumbers: Array<String> = JSON.parse(process.env.NUMBER_POOL).sort()
-
     const proxyBindings = {}
 
     for (const [key, activeAddresses] of Object.entries(activeProxyAddresses)) {
+      console.log(key);
+
+      const phoneNumbers: Array<String> = geoRouter(key)
       const availableNumbers = phoneNumbers.filter((pn) => {
         return !activeAddresses.includes(pn)
       })
