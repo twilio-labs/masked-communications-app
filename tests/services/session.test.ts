@@ -1,7 +1,8 @@
 import {
   addParticipantsToConversation,
   getActiveProxyAddresses,
-  matchAvailableProxyAddresses
+  matchAvailableProxyAddresses,
+  pullNumbers
 } from '../../src/services/session.service'
 import { listParticipantConversations } from '../../src/utils'
 import { retryAddParticipant } from '../../src/utils/retryAddParticipant.util'
@@ -67,7 +68,8 @@ describe('session service', () => {
     })
 
     it('throws Not enough numbers error if <1 number in pool', async () => {
-      mockedGeoRouter.mockReturnValue(['+3334445555', '+4445556666'])
+      mockedGeoRouter.mockReturnValueOnce(['+3334445555', '+4445556666'])
+      mockedGeoRouter.mockReturnValueOnce([])
       const activeProxyAddresses = { '+1112223333': ['+3334445555', '+4445556666'] }
 
       await expect(matchAvailableProxyAddresses(activeProxyAddresses)).rejects.toThrowError('Not enough numbers available in pool for +1112223333')
@@ -92,6 +94,16 @@ describe('session service', () => {
       const proxyBindings = { '+1112223333': ['+5556667777', '+6667778888'], '+2223334444': ['+5556667777', '+6667778888'] }
 
       await expect(addParticipantsToConversation('CHXXXXX', proxyBindings)).rejects.toThrow()
+    })
+  })
+
+  describe('pullNumbers', () => {
+    it('throws an error if geoRouter returns 0 phone numbers', () => {
+      mockedGeoRouter.mockReturnValue([])
+
+      expect(() => {
+        pullNumbers('+1112223333', ['+22233344444', '+3334445555'], 0)
+      }).toThrowError()
     })
   })
 })

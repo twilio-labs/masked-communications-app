@@ -77,7 +77,6 @@ export function geoRouter (
   const parsedNumber = phoneNumberParser(phoneNumber)
 
   if (parsedNumber.country === '1') {
-    console.log('is US/CA number')
     return getNearbyAreaCodeNumbers(phoneNumber, from, pageSize)
   }
 
