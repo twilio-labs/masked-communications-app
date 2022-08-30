@@ -45,6 +45,14 @@ describe('phone matcher service', () => {
       // eslint-disable-next-line quotes
       expect(result).toEqual(["+12365550001", "+15872222222", "+16395550001", "+16395550002"])
     })
+
+    it('works if there are two participants', () => {
+      const result1 = getNearbyAreaCodeNumbers('+12121112222')
+      expect(result1).toEqual(['+12121111111', '+13122222222', '+14083333333', '+14084444444'])
+
+      const result2 = getNearbyAreaCodeNumbers('+12121112223')
+      expect(result2).toEqual(['+12121111111', '+13122222222', '+14083333333', '+14084444444'])
+    })
   })
 
   describe('isCanadianNumber', () => {

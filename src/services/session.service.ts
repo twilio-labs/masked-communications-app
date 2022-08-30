@@ -30,9 +30,8 @@ export const matchAvailableProxyAddresses = async (activeProxyAddresses: ActiveP
     const proxyBindings = {}
 
     for (const [key, activeAddresses] of Object.entries(activeProxyAddresses)) {
-      console.log(key);
-
       const phoneNumbers: Array<String> = geoRouter(key)
+
       const availableNumbers = phoneNumbers.filter((pn) => {
         return !activeAddresses.includes(pn)
       })

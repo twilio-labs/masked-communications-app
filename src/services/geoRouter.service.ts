@@ -24,10 +24,17 @@ export function getNearbyAreaCodeNumbers (
   const country = isCanadianNumber(phoneNumber) ? 'ca' : 'us'
   const { area } = phoneNumberParser(phoneNumber)
 
-  const areaCodesByProximity: number[] | string[] =
-    areaCodeProximityMap[country][area]
+  // TODO: refactor this. It's currently being used to un-link
+  // array references in the number map and proximit map.
+  // If we don't unlink, values between function runs get
+  // mixed up / shifted out of the array and we don't get any results back.
+  const numberMap = JSON.parse(JSON.stringify(phoneNumberMap))
+  const proximityMap = JSON.parse(JSON.stringify(areaCodeProximityMap))
 
-  const countryPhoneMap = phoneNumberMap[country]
+  const areaCodesByProximity: number[] | string[] =
+    proximityMap[country][area]
+
+  const countryPhoneMap = numberMap[country]
 
   const optimalPhoneNumbers = []
   let curAreaCode = areaCodesByProximity.shift()
@@ -40,7 +47,7 @@ export function getNearbyAreaCodeNumbers (
     optimalPhoneNumbers.push(countryPhoneMap[curAreaCode].shift())
   }
 
-  return optimalPhoneNumbers.slice(from)
+  return optimalPhoneNumbers.slice(from, from + pageSize)
 }
 
 export function isCanadianNumber (phoneNumber: string): boolean {
@@ -59,7 +66,7 @@ export function getNumberByCountry (
   from: number = 0,
   pageSize: number = 50
 ): string[] {
-  return Object.values(phoneNumberMap[countryCode]).flat(0).slice(from, from + pageSize)
+  return Object.values(phoneNumberMap[countryCode]).flat(1).slice(from, from + pageSize)
 }
 
 export function geoRouter (
@@ -70,6 +77,7 @@ export function geoRouter (
   const parsedNumber = phoneNumberParser(phoneNumber)
 
   if (parsedNumber.country === '1') {
+    console.log('is US/CA number')
     return getNearbyAreaCodeNumbers(phoneNumber, from, pageSize)
   }
 
