@@ -43,7 +43,7 @@ export function getNearbyAreaCodeNumbers (
   return optimalPhoneNumbers.slice(from)
 }
 
-export function isCanadianNumber (phoneNumber: string) : boolean {
+export function isCanadianNumber (phoneNumber: string): boolean {
   const { area } = phoneNumberParser(phoneNumber)
   const canadianAreaCodes = areaCodeGeos.ca
 
@@ -51,26 +51,22 @@ export function isCanadianNumber (phoneNumber: string) : boolean {
     return String(area) === String(ac.areaCode)
   })
 
-  if (matchingCode.length > 0) {
-    return true
-  }
-
-  return false
+  return matchingCode.length > 0
 }
 
 export function getNumberByCountry (
-  countryCode: string,
+  countryCode: keyof typeof phoneNumberMap,
   from: number = 0,
   pageSize: number = 50
-) : string[] {
-  return phoneNumberMap[countryCode].slice(from, from + pageSize)
+): string[] {
+  return Object.values(phoneNumberMap[countryCode]).flat(0).slice(from, from + pageSize)
 }
 
 export function geoRouter (
   phoneNumber: string,
   from: number = 0,
   pageSize: number = 50
-) : string[] {
+): string[] {
   const parsedNumber = phoneNumberParser(phoneNumber)
 
   if (parsedNumber.country === '1') {
