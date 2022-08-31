@@ -4,7 +4,7 @@ import { app } from '../../src/app/app'
 import VoiceResponse from 'twilio/lib/twiml/VoiceResponse'
 
 describe('inbound call controller', () => {
-  jest.setTimeout(3600000)
+  jest.setTimeout(60000)
 
   // Test parameters
   const fromNumber = '+1001'

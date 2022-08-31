@@ -3,7 +3,7 @@ import {app} from '../../src/app/app'
 import * as DeleteConversation from '../../src/utils/deleteConversation.util'
 
 describe('conversations post event controller', () => {
-  jest.setTimeout(3600000)
+  jest.setTimeout(60000)
 
   beforeEach(() => {
     jest.resetAllMocks()
