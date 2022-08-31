@@ -43,7 +43,6 @@ export const generateTwiml = async (from: string, to: string) => {
         console.log(`Dialing ${pa.address} from ${pa.proxyAddress}...`)
 
           return client.calls.create({
-              url: `https://${process.env.DOMAIN}/join-conference?conferenceName=${encodeURIComponent(conferenceName)}`,
               to: pa.address,
               from: pa.proxyAddress,
               twiml: joinConferenceTwiml(conferenceName).toString(),
