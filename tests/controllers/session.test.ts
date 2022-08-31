@@ -7,7 +7,7 @@ import { Mock } from 'moq.ts'
 import { app } from '../../src/app/app'
 
 describe('sessions controller', () => {
-  jest.setTimeout(3600000)
+  jest.setTimeout(60000)
 
   // Test parameters
   const requestedPhoneNumbers = ['+1001', '+1002']
