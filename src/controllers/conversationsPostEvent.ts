@@ -15,10 +15,10 @@ export const post = async (
   if (eventType === 'onConversationUpdated' && state === 'closed') {
     try {
       await deleteConversation(conversationSid)
+      return res.status(200).send(`${conversationSid} deleted`)
     } catch (err) {
       return res.status(500).send(`${conversationSid} failed to delete: ${err}`)
     }
-    return res.status(200).send(`${conversationSid} deleted`)
   }
   return res.status(200).send('not processed')
 }
