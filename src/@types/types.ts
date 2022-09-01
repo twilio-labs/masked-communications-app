@@ -2,37 +2,43 @@ import type { Request } from 'express'
 import { ConversationListInstanceCreateOptions } from 'twilio/lib/rest/conversations/v1/conversation'
 
 export interface SessionPostBody extends ConversationListInstanceCreateOptions {
-  addresses: Array<string>;
+  addresses: Array<string>
 }
 
 export interface ConversationsPostEventBody {
-  AccountSid: string;
-  Attributes: string;
-  ChatServiceSid: string;
-  ConversationSid: string;
-  DateCreated: string;
-  DateUpdated: string;
-  EventType: string;
-  MessagingServiceSid: string;
-  RetryCount: string;
-  Source: string;
-  State: string;
+  AccountSid: string
+  Attributes: string
+  ChatServiceSid: string
+  ConversationSid: string
+  DateCreated: string
+  DateUpdated: string
+  EventType: string
+  MessagingServiceSid: string
+  RetryCount: string
+  Source: string
+  State: string
 }
 
 export interface ActiveProxyAddresses {
-  [key: string]: Array<String>;
+  [key: string]: Array<String>
 }
 
 export interface ProxyBindings {
-  [key: string]: Array<string>;
+  [key: string]: Array<string>
 }
 
 export interface ConversationParticipant {
-  'messagingBinding.address': string;
-  'messagingBinding.proxyAddress': string;
+  'messagingBinding.address': string
+  'messagingBinding.proxyAddress': string
 }
 
 export interface ParticipantToDial {
-  address: string,
+  address: string
   proxyAddress: string
+}
+
+// TODO: Determine should phone numbers be stored as a string or an object?
+export interface PhoneNumberMap {
+  ca: { [key: number | string]: string[] }
+  us: { [key: number | string]: string[] }
 }

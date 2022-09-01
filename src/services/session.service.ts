@@ -1,5 +1,7 @@
 import { ActiveProxyAddresses, ProxyBindings } from '../@types/types'
 import { listParticipantConversations, retryAddParticipant } from '../utils'
+import { geoRouter } from './geoRouter.service'
+import { phoneBatchSize } from '../config/phoneBatchSize'
 
 export const getActiveProxyAddresses = async (phoneNumbers: Array<String>) : Promise<ActiveProxyAddresses> => {
   const activeConversations = {}
@@ -31,28 +33,39 @@ export const getActiveProxyAddresses = async (phoneNumbers: Array<String>) : Pro
   }
 }
 
+export function pullNumbers (userPhone: string, activeAddresses: String[], from: number) {
+  const phoneNumbers: Array<String> = geoRouter(userPhone, from, phoneBatchSize)
+  console.log({ userPhone }, { activeAddresses }, { phoneNumbers }, { from })
+  if (phoneNumbers.length === 0) {
+    throw new Error(`Not enough numbers available in pool for ${userPhone}`)
+  }
+
+  const availableNumbers = phoneNumbers.filter((pn) => {
+    return !activeAddresses.includes(pn)
+  })
+
+  console.log({ availableNumbers })
+
+  if (availableNumbers.length < 1) {
+    return pullNumbers(userPhone, activeAddresses, from + phoneBatchSize)
+  }
+
+  return { [userPhone]: availableNumbers }
+}
+
 export const matchAvailableProxyAddresses = async (activeProxyAddresses: ActiveProxyAddresses) : Promise<ProxyBindings> => {
   try {
-    const phoneNumbers: Array<String> = JSON.parse(process.env.NUMBER_POOL).sort()
+    let proxyBindings = {}
 
-    const proxyBindings = {}
-
-    for (const [key, activeAddresses] of Object.entries(activeProxyAddresses)) {
-      const availableNumbers = phoneNumbers.filter((pn) => {
-        return !activeAddresses.includes(pn)
-      })
-
-      if (availableNumbers.length < 1) {
-        throw new Error(`Not enough numbers available in pool for ${key}`)
-      }
-
-      proxyBindings[key] = availableNumbers
+    for (const [userPhone, activeAddresses] of Object.entries(activeProxyAddresses)) {
+      const newBindings = pullNumbers(userPhone, activeAddresses, 0)
+      proxyBindings = Object.assign(proxyBindings, newBindings)
     }
 
     return proxyBindings
   } catch (err) {
     console.log(err)
-    throw new Error(err)
+    throw Error(err)
   }
 }
 
