@@ -9,7 +9,7 @@
     "http-errors": "^2.0.0",
     "moq.ts": "^9.0.2",
     "morgan": "^1.10.0",
-    "twilio": "^3.78.0"
+    "twilio": "^4.0.0"
   },
   "devDependencies": {
     "@types/async-retry": "^1.4.4",
