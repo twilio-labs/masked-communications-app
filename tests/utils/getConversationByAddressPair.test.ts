@@ -62,13 +62,13 @@ describe('GetConversationByAddressPair util', () => {
 
   it('should retry if Twilio error is 429', async () => {
     class TwilioError extends Error {
-        status: number
+      status: number
 
-        constructor (message) {
-          super(message)
-          this.name = 'ConcurrencyLimit'
-          this.status = 429
-        }
+      constructor (message) {
+        super(message)
+        this.name = 'ConcurrencyLimit'
+        this.status = 429
+      }
     }
 
     mockedClient.conversations = {

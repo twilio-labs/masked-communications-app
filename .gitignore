@@ -3,4 +3,5 @@ node_modules
 .env
 launch.json
 coverage/
+.vscode
 .DS_Store

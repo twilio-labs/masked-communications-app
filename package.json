@@ -39,6 +39,7 @@
   "scripts": {
     "dev": "nodemon -r dotenv/config index.ts",
     "loadtest": "node ./tests/loadtest.js",
+    "prepare": "ts-node scripts/preparePhoneNumberMap.ts",
     "test": "jest"
   },
   "version": "1.0.0",
