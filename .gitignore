@@ -4,3 +4,4 @@ node_modules
 launch.json
 coverage/
 .vscode
+.DS_Store

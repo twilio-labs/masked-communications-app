@@ -8,6 +8,14 @@ import {
   generateConferenceName
 } from '../utils/'
 
+export function joinConferenceTwiml (conferenceName: string) : VoiceResponse {
+  const response = new VoiceResponse()
+  const dial = response.dial()
+  dial.conference(`${decodeURIComponent(conferenceName)}`)
+
+  return response
+}
+
 export const generateTwiml = async (from: string, to: string) => {
   const response = new VoiceResponse()
 
@@ -35,9 +43,9 @@ export const generateTwiml = async (from: string, to: string) => {
         console.log(`Dialing ${pa.address} from ${pa.proxyAddress}...`)
 
         return client.calls.create({
-          url: `https://${process.env.DOMAIN}/join-conference?conferenceName=${encodeURIComponent(conferenceName)}`,
           to: pa.address,
-          from: pa.proxyAddress
+          from: pa.proxyAddress,
+          twiml: joinConferenceTwiml(conferenceName).toString()
         })
       })
 

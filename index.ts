@@ -1,3 +1,5 @@
+// Copyright (c) 2022 Twilio Inc.
+
 import {app} from './src/app/app'
 
 const PORT = process.env.PORT || 3000

@@ -7,9 +7,16 @@ export const getActiveProxyAddresses = async (phoneNumbers: Array<String>) : Pro
   const activeConversations = {}
 
   const promises = phoneNumbers.map(async (phoneNumber: string) => {
+    // listParticipantConversations returns ALL conversations, closed and active.
     const participantConversations = await listParticipantConversations(phoneNumber)
 
-    const proxyAddresses = participantConversations.map((participant) => {
+    // We want to ignore closed conversations since we cant use conversations once they're closed.
+    // We can use conversations that are active or inactive
+    const participantActiveConversations = participantConversations.filter((participant) => {
+      return participant.conversationState !== 'closed'
+    })
+    // Let's get all the proxy addresses that currently being used in the active conversations
+    const proxyAddresses = participantActiveConversations.map((participant) => {
       return participant.participantMessagingBinding.proxy_address
     })
 

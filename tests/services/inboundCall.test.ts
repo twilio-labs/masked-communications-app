@@ -80,7 +80,7 @@ describe('inbound call service', () => {
       expect.objectContaining({
         to: '+1112223333',
         from: '+2223334444',
-        url: 'https://testdomain.com/join-conference?conferenceName=test_conference'
+        twiml: '<?xml version="1.0" encoding="UTF-8"?><Response><Dial><Conference>test_conference</Conference></Dial></Response>'
       })
     )
 
@@ -88,7 +88,7 @@ describe('inbound call service', () => {
       expect.objectContaining({
         to: '+3334445555',
         from: '+4445556666',
-        url: 'https://testdomain.com/join-conference?conferenceName=test_conference'
+        twiml: '<?xml version="1.0" encoding="UTF-8"?><Response><Dial><Conference>test_conference</Conference></Dial></Response>'
       })
     )
   })

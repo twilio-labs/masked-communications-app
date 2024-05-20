@@ -32,12 +32,6 @@ export interface ConversationParticipant {
   'messagingBinding.proxyAddress': string
 }
 
-export interface JoinConferenceParams extends Request {
-  params: {
-    conferenceName: string
-  }
-}
-
 export interface ParticipantToDial {
   address: string
   proxyAddress: string
