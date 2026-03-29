@@ -1,4 +1,3 @@
-import type { Request } from 'express'
 import { ConversationListInstanceCreateOptions } from 'twilio/lib/rest/conversations/v1/conversation'
 
 export interface SessionPostBody extends ConversationListInstanceCreateOptions {
@@ -20,7 +19,7 @@ export interface ConversationsPostEventBody {
 }
 
 export interface ActiveProxyAddresses {
-  [key: string]: Array<String>
+  [key: string]: Array<string>
 }
 
 export interface ProxyBindings {

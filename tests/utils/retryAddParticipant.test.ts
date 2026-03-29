@@ -12,12 +12,12 @@ describe('retryParticipantAdd', () => {
   })
 
   it('calls itself again when 50416 is thrown to try another address', async () => {
-    const mockAddParticipant = jest.mocked(addParticipant, true)
+    const mockAddParticipant = jest.mocked(addParticipant, { shallow: true })
 
     class TwilioError extends Error {
       code: number
 
-      constructor (message) {
+      constructor (message: string) {
         super(message)
         this.name = 'ConcurrencyLimit'
         this.code = 50416
@@ -47,7 +47,7 @@ describe('retryParticipantAdd', () => {
   })
 
   it('throws an error if client err code is not 50416', async () => {
-    const mockAddParticipant = jest.mocked(addParticipant, true)
+    const mockAddParticipant = jest.mocked(addParticipant, { shallow: true })
 
     const rejectedValue = new Error('Twilio Problem')
     mockAddParticipant

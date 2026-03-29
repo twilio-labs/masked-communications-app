@@ -1,3 +1,5 @@
 export * as conversationsPostEvent from './conversationsPostEvent'
 export * as inboundCall from './inboundCall'
+export * as recordingStatus from './recordingStatus'
 export * as session from './session'
+export * as transcriptionStatus from './transcriptionStatus'

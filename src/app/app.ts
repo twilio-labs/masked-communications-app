@@ -25,4 +25,4 @@ app.use(router)
 /****************************************************
  Apply Routes
  ****************************************************/
-app.use((req, res, next) => next(createError(404))) // throw 404 if route not found
+app.use((_req, _res, next) => next(createError(404))) // throw 404 if route not found

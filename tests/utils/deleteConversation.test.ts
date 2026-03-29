@@ -9,7 +9,7 @@ describe('deleteConversation util', () => {
   })
 
   it('it deletes conversation', async () => {
-    const mockedClient = jest.mocked(client, true)
+    const mockedClient = jest.mocked(client, { shallow: true })
 
     const removeSpy = jest.fn(() => {
       return true
@@ -33,7 +33,7 @@ describe('deleteConversation util', () => {
   })
 
   it('throws an error if Twilio client throws', async () => {
-    const mockedClient = jest.mocked(client, true)
+    const mockedClient = jest.mocked(client, { shallow: true })
 
     const removeSpy = jest.fn(() => {
       throw new Error('Twilio Problem')
@@ -64,14 +64,14 @@ describe('deleteConversation util', () => {
     class TwilioError extends Error {
       status: number
 
-      constructor (message) {
+      constructor (message: string) {
         super(message)
         this.name = 'ConcurrencyLimit'
         this.status = 429
       }
     }
 
-    const mockedClient = jest.mocked(client, true)
+    const mockedClient = jest.mocked(client, { shallow: true })
 
     const removeSpy = jest.fn(() => {
       throw new TwilioError('Too many connections')

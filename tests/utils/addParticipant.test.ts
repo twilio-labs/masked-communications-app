@@ -4,7 +4,7 @@ import client from '../../src/twilioClient'
 import { ParticipantListInstanceCreateOptions } from 'twilio/lib/rest/conversations/v1/conversation/participant'
 
 jest.mock('../../src/twilioClient')
-const mockedClient = jest.mocked(client, true)
+const mockedClient = jest.mocked(client, { shallow: true })
 
 const mockParticipant: Partial<ParticipantListInstanceCreateOptions> = {
   identity: '+1234'
@@ -16,8 +16,8 @@ describe('addParticipant util', () => {
   })
 
   it('it adds participant to conversation', async () => {
-    const createSpy = jest.fn((options) => { return mockParticipant })
-    const conversationsSpy = jest.fn((options) => {
+    const createSpy = jest.fn((_options) => { return mockParticipant })
+    const conversationsSpy = jest.fn((_options) => {
       return {
         participants: { create: createSpy }
       }
@@ -34,8 +34,8 @@ describe('addParticipant util', () => {
   })
 
   it('calls quit if error is not a 429 retry', async () => {
-    const createSpy = jest.fn((options) => { throw new Error('Twilio Problem') })
-    const conversationsSpy = jest.fn((options) => {
+    const createSpy = jest.fn((_options) => { throw new Error('Twilio Problem') })
+    const conversationsSpy = jest.fn((_options) => {
       return {
         participants: { create: createSpy }
       }
@@ -59,15 +59,15 @@ describe('addParticipant util', () => {
     class TwilioError extends Error {
       status: number
 
-      constructor (message) {
+      constructor (message: string) {
         super(message)
         this.name = 'ConcurrencyLimit'
         this.status = 429
       }
     }
 
-    const createSpy = jest.fn((options) => { throw new TwilioError('Concurrency Limit') })
-    const conversationsSpy = jest.fn((options) => {
+    const createSpy = jest.fn((_options) => { throw new TwilioError('Concurrency Limit') })
+    const conversationsSpy = jest.fn((_options) => {
       return {
         participants: { create: createSpy }
       }

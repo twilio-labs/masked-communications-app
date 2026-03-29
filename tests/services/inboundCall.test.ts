@@ -14,9 +14,9 @@ jest.mock('../../src/utils/generateConferenceName.util')
 
 describe('inbound call service', () => {
   const env = process.env
-  const mockGetConversationAddressPair = jest.mocked(getConversationByAddressPair, true)
-  const mockListConversationParticipants = jest.mocked(listConversationParticipants, true)
-  const mockParticipantsToDial = jest.mocked(participantsToDial, true)
+  const mockGetConversationAddressPair = jest.mocked(getConversationByAddressPair, { shallow: true })
+  const mockListConversationParticipants = jest.mocked(listConversationParticipants, { shallow: true })
+  const mockParticipantsToDial = jest.mocked(participantsToDial, { shallow: true })
 
   beforeEach(() => {
     jest.resetModules()
@@ -45,9 +45,9 @@ describe('inbound call service', () => {
     process.env.CALL_ANNOUCEMENT_LANGUAGE = 'en'
     process.env.CONNECTING_CALL_ANNOUCEMENT = 'Connecting you to your agent now.'
 
-    const mockedClient = jest.mocked(client, true)
+    const mockedClient = jest.mocked(client, { shallow: true })
     const createSpy = jest.fn((callObject) => { })
-    const mockedConferenceName = jest.mocked(generateConferenceName, true)
+    const mockedConferenceName = jest.mocked(generateConferenceName, { shallow: true })
 
     mockedClient.calls = {
       create: (options) => createSpy(options)
@@ -99,7 +99,7 @@ describe('inbound call service', () => {
     process.env.CALL_ANNOUCEMENT_LANGUAGE = 'en'
     process.env.CONNECTING_CALL_ANNOUCEMENT = 'Connecting you to your agent now.'
 
-    const mockedClient = jest.mocked(client, true)
+    const mockedClient = jest.mocked(client, { shallow: true })
 
     mockedClient.calls = {
       create: jest.fn(() => { throw new Error('Call fail') })

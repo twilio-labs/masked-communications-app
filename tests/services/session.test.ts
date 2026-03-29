@@ -12,13 +12,13 @@ import { mockListParticipantsResponse } from '../support/testSupport'
 import { geoRouter } from '../../src/services/geoRouter.service'
 
 jest.mock('../../src/utils/listParticipantConversations.util')
-const mockedListParticipantConversations = jest.mocked(listParticipantConversations, true)
+const mockedListParticipantConversations = jest.mocked(listParticipantConversations, { shallow: true })
 
 jest.mock('../../src/utils/retryAddParticipant.util')
-const mockedRetryAddParticipant = jest.mocked(retryAddParticipant, true)
+const mockedRetryAddParticipant = jest.mocked(retryAddParticipant, { shallow: true })
 
 jest.mock('../../src/services/geoRouter.service')
-const mockedGeoRouter = jest.mocked(geoRouter, true)
+const mockedGeoRouter = jest.mocked(geoRouter, { shallow: true })
 
 describe('session service', () => {
   describe('getActiveProxyAdresses', () => {

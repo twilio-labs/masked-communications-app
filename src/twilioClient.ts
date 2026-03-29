@@ -13,7 +13,7 @@ if (process.env.NODE_ENV === "test") {
 
 
 if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
-  throw Error(
+  throw new Error(
     "TWILIO_ACCOUNT_SID &/or TWILIO_AUTH_TOKEN are missing from environment variables."
   );
 }

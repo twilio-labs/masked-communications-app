@@ -2,7 +2,7 @@ import { getConversationByAddressPair } from '../../src/utils'
 import client from '../../src/twilioClient'
 
 jest.mock('../../src/twilioClient')
-const mockedClient = jest.mocked(client, true)
+const mockedClient = jest.mocked(client, { shallow: true })
 
 describe('GetConversationByAddressPair util', () => {
   beforeEach(() => {
@@ -64,7 +64,7 @@ describe('GetConversationByAddressPair util', () => {
     class TwilioError extends Error {
       status: number
 
-      constructor (message) {
+      constructor (message: string) {
         super(message)
         this.name = 'ConcurrencyLimit'
         this.status = 429

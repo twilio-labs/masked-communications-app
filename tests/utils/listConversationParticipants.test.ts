@@ -2,7 +2,7 @@ import { listConversationParticipants } from '../../src/utils'
 import client from '../../src/twilioClient'
 
 jest.mock('../../src/twilioClient')
-const mockedClient = jest.mocked(client, true)
+const mockedClient = jest.mocked(client, { shallow: true })
 
 describe('listConversationParticipants', () => {
   it('it lists participants with provided conversation sid', async () => {
@@ -51,7 +51,7 @@ describe('listConversationParticipants', () => {
     class TwilioError extends Error {
       status: number
 
-      constructor (message) {
+      constructor (message: string) {
         super(message)
         this.name = 'ConcurrencyLimit'
         this.status = 429
