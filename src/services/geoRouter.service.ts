@@ -22,7 +22,10 @@ export function getNearbyAreaCodeNumbers (
 ) {
   // array of area codes ordered by their proximity to the areaCode argument
   const country = isCanadianNumber(phoneNumber) ? 'ca' : 'us'
-  const { area } = phoneNumberParser(phoneNumber)
+  const parsedNumber = phoneNumberParser(phoneNumber)
+  const area = parsedNumber?.area
+
+  if (!area) return []
 
   // TODO: refactor this. It's currently being used to un-link
   // array references in the number map and proximit map.
@@ -51,7 +54,10 @@ export function getNearbyAreaCodeNumbers (
 }
 
 export function isCanadianNumber (phoneNumber: string): boolean {
-  const { area } = phoneNumberParser(phoneNumber)
+  const parsedNumber = phoneNumberParser(phoneNumber)
+  const area = parsedNumber?.area
+  if (!area) return false
+
   const canadianAreaCodes = areaCodeGeos.ca
 
   const matchingCode = canadianAreaCodes.filter((ac) => {
@@ -76,9 +82,13 @@ export function geoRouter (
 ): string[] {
   const parsedNumber = phoneNumberParser(phoneNumber)
 
-  if (parsedNumber.country === '1') {
+  if (parsedNumber?.country === '1') {
     return getNearbyAreaCodeNumbers(phoneNumber, from, pageSize)
   }
 
-  return getNumberByCountry(parsedNumber.country, from, pageSize)
+  if (parsedNumber?.country) {
+    return getNumberByCountry(parsedNumber.country as keyof typeof phoneNumberMap, from, pageSize)
+  }
+
+  return []
 }

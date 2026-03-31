@@ -8,17 +8,17 @@ import { retryConfig } from '../config/retry.config'
 export const createConversation = async (options: SessionPostBody, retryOptions = retryConfig) : Promise<ConversationInstance> => {
   return retry(async (quit) => {
     try {
-      return client.conversations.conversations.create(options)
-    } catch (err) {
+      return await client.conversations.conversations.create(options)
+    } catch (err: any) {
       if (err.status !== 429) {
         console.log('Quit without retry')
         console.log(err)
         quit(new Error('Quit without retry'))
-        return
+        throw new Error(String(err))
       }
 
       console.log('Re-trying on 429 error')
-      throw new Error(err)
+      throw new Error(String(err))
     }
   }, retryOptions)
 }

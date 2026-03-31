@@ -3,8 +3,8 @@ import { listParticipantConversations, retryAddParticipant } from '../utils'
 import { geoRouter } from './geoRouter.service'
 import { phoneBatchSize } from '../config/phoneBatchSize'
 
-export const getActiveProxyAddresses = async (phoneNumbers: Array<String>) : Promise<ActiveProxyAddresses> => {
-  const activeConversations = {}
+export const getActiveProxyAddresses = async (phoneNumbers: Array<string>) : Promise<ActiveProxyAddresses> => {
+  const activeConversations: ActiveProxyAddresses = {}
 
   const promises = phoneNumbers.map(async (phoneNumber: string) => {
     // listParticipantConversations returns ALL conversations, closed and active.
@@ -27,14 +27,14 @@ export const getActiveProxyAddresses = async (phoneNumbers: Array<String>) : Pro
   try {
     await Promise.all(promises)
     return activeConversations
-  } catch (err) {
+  } catch (err: any) {
     console.log(err)
-    throw new Error(err)
+    throw new Error(String(err))
   }
 }
 
-export function pullNumbers (userPhone: string, activeAddresses: String[], from: number) {
-  const phoneNumbers: Array<String> = geoRouter(userPhone, from, phoneBatchSize)
+export function pullNumbers (userPhone: string, activeAddresses: string[], from: number) {
+  const phoneNumbers: Array<string> = geoRouter(userPhone, from, phoneBatchSize)
   console.log({ userPhone }, { activeAddresses }, { phoneNumbers }, { from })
   if (phoneNumbers.length === 0) {
     throw new Error(`Not enough numbers available in pool for ${userPhone}`)
@@ -55,7 +55,7 @@ export function pullNumbers (userPhone: string, activeAddresses: String[], from:
 
 export const matchAvailableProxyAddresses = async (activeProxyAddresses: ActiveProxyAddresses) : Promise<ProxyBindings> => {
   try {
-    let proxyBindings = {}
+    let proxyBindings: ProxyBindings = {}
 
     for (const [userPhone, activeAddresses] of Object.entries(activeProxyAddresses)) {
       const newBindings = pullNumbers(userPhone, activeAddresses, 0)
@@ -63,9 +63,9 @@ export const matchAvailableProxyAddresses = async (activeProxyAddresses: ActiveP
     }
 
     return proxyBindings
-  } catch (err) {
+  } catch (err: any) {
     console.log(err)
-    throw Error(err)
+    throw new Error(String(err))
   }
 }
 
@@ -80,8 +80,8 @@ export const addParticipantsToConversation = async (conversationSid: string, pro
   try {
     const results = await Promise.all(promises)
     return results
-  } catch (err) {
+  } catch (err: any) {
     console.log(err)
-    throw new Error(err)
+    throw new Error(String(err))
   }
 }

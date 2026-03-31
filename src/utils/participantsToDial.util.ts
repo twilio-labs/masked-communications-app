@@ -13,7 +13,7 @@ export const participantsToDial = (participants: Array<ParticipantInstance>, fro
     }
 
     return result
-  }, [])
+  }, [] as ParticipantToDial[])
 
   return output
 }

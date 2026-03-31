@@ -16,15 +16,15 @@ export const addParticipant = async (
         .create(participant)
 
       return createdParticipant
-    } catch (err) {
+    } catch (err: any) {
       if (err.status !== 429) {
         console.log('Quit without retry')
-        quit(new Error(err));
-        return;
+        quit(new Error(String(err)))
+        throw new Error(String(err))
       }
 
       console.log('Re-trying on 429 error');
-      throw new Error(err);
+      throw new Error(String(err))
     }
   }, retryOptions)
 }

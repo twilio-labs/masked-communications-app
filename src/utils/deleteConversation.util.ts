@@ -8,15 +8,15 @@ export const deleteConversation = async (conversationSid: string, retryOptions =
     try {
       await client.conversations.conversations(conversationSid).remove()
       return true
-    } catch (err) {
+    } catch (err: any) {
       if (err.status !== 429) {
         console.log('Quit without retry')
-        quit(new Error(err));
-        return;
+        quit(new Error(String(err)))
+        return false
       }
 
       console.log('Re-trying on 429 error');
-      throw new Error(err);
-    } 
+      throw new Error(String(err))
+    }
   }, retryOptions)
 }

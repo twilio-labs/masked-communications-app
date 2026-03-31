@@ -13,13 +13,13 @@ export async function retryAddParticipant(conversationSid: string, participantAd
 
     const result = await addParticipant(conversationSid, participant)
     return result
-  } catch(err) {
+  } catch(err: any) {
     if (err.code === 50416) {
       proxyAddresses.shift()
       return retryAddParticipant(conversationSid, participantAddress, proxyAddresses)
     } else {
       console.log(err)
-      throw new Error(err)
+      throw new Error(String(err))
     }
   }
 }

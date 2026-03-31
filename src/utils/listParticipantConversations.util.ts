@@ -8,16 +8,16 @@ export const listParticipantConversations = async (phoneNumber: string, retryOpt
     try {
       const activeConversations = await client.conversations.participantConversations.list({address: phoneNumber})
       return activeConversations
-    } catch (err) {
+    } catch (err: any) {
       if (err.status !== 429) {
         console.log('Quit without retry')
         console.log(err)
-        quit(new Error('Quit without retry'));
-        return;
+        quit(new Error('Quit without retry'))
+        throw new Error(String(err))
       }
 
-      console.log('Re-trying on 429 error');
-      throw new Error(err);
+      console.log('Re-trying on 429 error')
+      throw new Error(String(err))
     }
   }, retryOptions)
 }
